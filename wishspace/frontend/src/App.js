@@ -434,35 +434,6 @@ function App() {
   );
 }
 
-  // ... rest of App component ...
 
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
-        {/* ... existing AppBar and Container ... */}
-        
-        {/* Phone Number Prompt Dialog */}
-        <Dialog open={showPhoneNumberPrompt} onClose={() => setShowPhoneNumberPrompt(false)}>
-            <DialogTitle>{t('share_phone_number_title')}</DialogTitle>
-            <DialogContent>
-                <Typography>{t('share_phone_number_message')}</Typography>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={() => setShowPhoneNumberPrompt(false)}>{t('cancel')}</Button>
-                <Button variant="contained" color="primary" onClick={handleSharePhoneNumber}>
-                    {t('share_phone_number_button')}
-                </Button>
-            </DialogActions>
-        </Dialog>
-      </Box>
-      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
-    </ThemeProvider>
-  );
-}
 
 export default App;
