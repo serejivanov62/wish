@@ -170,28 +170,21 @@ logger = logging.getLogger(__name__)
 # ... inside read_users_me ...
 @auth_router.get("/api/users/me", response_model=schemas.User)
 def read_users_me(current_user: models.User = Depends(get_current_user)):
-    logger.debug(f"Attempting to serialize current_user: {current_user}")
-    logger.debug(f"Type of current_user: {type(current_user)}")
-    logger.debug(f"current_user.__dict__: {current_user.__dict__}")
-
-    # Log each attribute
-    logger.debug(f"current_user.id: {current_user.id} (type: {type(current_user.id)})")
-    logger.debug(f"current_user.telegram_id: {current_user.telegram_id} (type: {type(current_user.telegram_id)})")
-    logger.debug(f"current_user.name: {current_user.name} (type: {type(current_user.name)})")
-    logger.debug(f"current_user.phone: {current_user.phone} (type: {type(current_user.phone)})")
-    logger.debug(f"current_user.avatar_url: {current_user.avatar_url} (type: {type(current_user.avatar_url)})")
-    logger.debug(f"current_user.created_at: {current_user.created_at} (type: {type(current_user.created_at)})")
-
-    # Attempt manual Pydantic validation for more detailed error
     try:
         validated_user = schemas.User.model_validate(current_user) # For Pydantic v2
-        logger.debug(f"Manual Pydantic validation successful: {validated_user}")
+        return validated_user # Return the validated object
     except ValidationError as e:
-        logger.error(f"Manual Pydantic validation failed: {e.errors()}", exc_info=True)
+        # Raise HTTPException with the detailed Pydantic errors
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=e.errors()
+        )
     except Exception as e:
-        logger.error(f"An unexpected error occurred during manual Pydantic validation: {e}", exc_info=True)
-
-    return current_user
+        # Catch any other unexpected errors
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred: {e}"
+        )
 
 app.include_router(auth_router)
 
