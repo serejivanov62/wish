@@ -6,7 +6,7 @@ services:
     ports:
       - "${APP_PORT:-8001}:8001"
     volumes:
-      - ./wishspace.db:/app/wishspace.db
+      - ./db_data:/app/data
     env_file:
       - ./.env
 
