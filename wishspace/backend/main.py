@@ -144,7 +144,7 @@ def auth_via_telegram(auth_data: schemas.TelegramAuthData, db: Session = Depends
         telegram_id=user_data["id"],
         name=user_data.get("first_name", "") + " " + user_data.get("last_name", ""),
         phone=user_data.get("phone_number"), # Telegram initData might not always have phone_number
-        avatar_url=user_data.get("photo_url")
+        avatar_url=str(user_data.get("photo_url")) if user_data.get("photo_url") else None
     )
     db_user = crud.get_or_create_user(db, user=user_create_data)
 
