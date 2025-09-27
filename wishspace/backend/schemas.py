@@ -23,8 +23,8 @@ class Booking(BaseModel):
 class ItemBase(BaseModel):
     title: constr(min_length=1, max_length=255)
     description: Optional[constr(max_length=1000)] = None
-    image_url: Optional[HttpUrl] = None
-    link: Optional[HttpUrl] = None
+    image_url: Optional[str] = None
+    link: Optional[str] = None
     price: Optional[float] = Field(None, ge=0)
     note: Optional[constr(max_length=500)] = None
 
@@ -69,7 +69,7 @@ class FriendAdd(BaseModel):
 class Friend(BaseModel):
     id: int
     name: str
-    avatar_url: Optional[HttpUrl] = None
+    avatar_url: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -79,12 +79,15 @@ class UserCreate(BaseModel):
     telegram_id: int
     name: str
     phone: Optional[constr(pattern=r"^\+\d{10,15}$")] = None
-    avatar_url: Optional[HttpUrl] = None
+    avatar_url: Optional[str] = None
 
 class User(BaseModel):
     id: int
     telegram_id: int
     name: str
+    phone: Optional[str] = None
+    avatar_url: Optional[str] = None
+    created_at: datetime
 
     class Config:
         from_attributes = True

@@ -20,7 +20,7 @@ def create_user(db: Session, user: schemas.UserCreate):
         telegram_id=user.telegram_id,
         name=user.name,
         phone=user.phone,
-        avatar_url=str(user.avatar_url) if user.avatar_url else None
+        avatar_url=user.avatar_url
     )
     db.add(db_user)
     db.commit()
