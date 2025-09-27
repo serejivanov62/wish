@@ -155,8 +155,36 @@ def auth_via_telegram(auth_data: schemas.TelegramAuthData, db: Session = Depends
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
+import logging
+# ... other imports ...
+
+# Configure logging (add this at the top of main.py, after imports)
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# ... inside read_users_me ...
 @auth_router.get("/api/users/me", response_model=schemas.User)
 def read_users_me(current_user: models.User = Depends(get_current_user)):
+    logger.debug(f"Attempting to serialize current_user: {current_user}")
+    logger.debug(f"Type of current_user: {type(current_user)}")
+    logger.debug(f"current_user.__dict__: {current_user.__dict__}")
+
+    # Log each attribute
+    logger.debug(f"current_user.id: {current_user.id} (type: {type(current_user.id)})")
+    logger.debug(f"current_user.telegram_id: {current_user.telegram_id} (type: {type(current_user.telegram_id)})")
+    logger.debug(f"current_user.name: {current_user.name} (type: {type(current_user.name)})")
+    logger.debug(f"current_user.phone: {current_user.phone} (type: {type(current_user.phone)})")
+    logger.debug(f"current_user.avatar_url: {current_user.avatar_url} (type: {type(current_user.avatar_url)})")
+    logger.debug(f"current_user.created_at: {current_user.created_at} (type: {type(current_user.created_at)})")
+
+    # Attempt manual Pydantic validation for more detailed error
+    try:
+        # Assuming Pydantic v2 for model_validate, if v1 use from_orm
+        validated_user = schemas.User.model_validate(current_user)
+        logger.debug(f"Manual Pydantic validation successful: {validated_user}")
+    except Exception as e:
+        logger.error(f"Manual Pydantic validation failed: {e}", exc_info=True)
+
     return current_user
 
 app.include_router(auth_router)
