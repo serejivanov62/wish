@@ -242,9 +242,14 @@ export default function Events({ user, onShowSnackbar }) {
     const [selectedEvent, setSelectedEvent] = useState(null);
 
     const fetchEvents = useCallback(() => {
-        if (!user || !user.id) return;
+        console.log('fetchEvents called');
+        if (!user || !user.id) {
+            console.log('fetchEvents: user or user.id is missing', user);
+            return;
+        }
         axios.get(`/api/users/${user.id}/events`)
             .then(response => {
+                console.log('fetchEvents: received data', response.data);
                 setEvents(response.data);
             })
             .catch(err => {
@@ -254,10 +259,12 @@ export default function Events({ user, onShowSnackbar }) {
     }, [user, t]);
 
     useEffect(() => {
+        console.log('Events component useEffect triggered');
         fetchEvents();
     }, [fetchEvents]);
 
     const handleEventCreate = (newEvent) => {
+        console.log('handleEventCreate: new event created', newEvent);
         setEvents(prevEvents => [...prevEvents, newEvent]);
     };
 
