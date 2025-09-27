@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 
@@ -14,7 +14,6 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Alert from '@mui/material/Alert';
 import Snackbar from '@mui/material/Snackbar';
-import Grid from '@mui/material/Grid';
 import Stack from '@mui/material/Stack';
 import Avatar from '@mui/material/Avatar';
 import Dialog from '@mui/material/Dialog';
@@ -241,11 +240,11 @@ function App() {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
-  const handleShowSnackbar = (message, severity) => {
+  const handleShowSnackbar = useCallback((message, severity) => {
     setSnackbarMessage(message);
     setSnackbarSeverity(severity);
     setSnackbarOpen(true);
-  };
+  }, []);
 
   // Axios Interceptor to add Authorization header
   useEffect(() => {
@@ -266,8 +265,10 @@ function App() {
     };
   }, []);
 
+  // eslint-disable-next-line no-unused-vars
   const [showPhoneNumberPrompt, setShowPhoneNumberPrompt] = useState(false);
 
+  // eslint-disable-next-line no-unused-vars
   const handleSharePhoneNumber = () => {
     console.log('handleSharePhoneNumber called');
     if (tg && tg.requestContact) {

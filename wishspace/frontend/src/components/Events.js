@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 
 // MUI Imports
-import { Button, TextField, Typography, Box, Paper, Select, MenuItem, FormControl, InputLabel, Stack, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, Snackbar, Alert } from '@mui/material';
+import { Button, TextField, Typography, Box, Paper, Select, MenuItem, FormControl, InputLabel, Stack, Dialog, DialogTitle, DialogContent, DialogActions, IconButton } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 
@@ -71,17 +71,6 @@ function EventDetailView({ user, event, onBack, onEventUpdated, onEventDeleted, 
     const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
 
     const fetchAvailableItems = useCallback(() => {
-        axios.get(`/api/items`)
-            .then(response => {
-                const currentEventItemIds = new Set(eventItems.map(item => item.id));
-                const filteredItems = response.data.filter(item => !currentEventItemIds.has(item.id));
-                setAvailableItems(filteredItems);
-                if (filteredItems.length > 0) {
-                    setSelectedItemId(filteredItems[0].id);
-                }
-            })
-            .catch(err => console.error('Failed to fetch available items', err));
-    }, [user.id, eventItems]);
 
     useEffect(() => {
         fetchAvailableItems();

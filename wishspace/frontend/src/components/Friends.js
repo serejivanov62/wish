@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useTranslation } from 'react-i18next';
 
 // MUI Imports
-import { Button, TextField, Typography, Box, Paper, Stack, Avatar, IconButton, Dialog, DialogTitle, DialogContent, DialogActions, Snackbar, Alert } from '@mui/material';
+import { Button, TextField, Typography, Box, Paper, Stack, Avatar, IconButton, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 
 function AddFriendForm({ onFriendAdd, onShowSnackbar }) {
