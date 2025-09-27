@@ -77,7 +77,8 @@ const resources = {
       "phone_number_update_failed": "Failed to update phone number.",
       "phone_number_not_received": "Phone number not received from Telegram. Please try again.",
       "phone_number_share_declined": "Phone number sharing declined.",
-      "telegram_webapp_not_available": "Telegram WebApp is not available."
+      "telegram_webapp_not_available": "Telegram WebApp is not available.",
+      "phone_number_request_sent": "Phone number request sent. Please check Telegram prompt."
     }
   },
   ru: {
@@ -153,7 +154,8 @@ const resources = {
       "phone_number_update_failed": "Не удалось обновить номер телефона.",
       "phone_number_not_received": "Номер телефона не получен от Telegram. Пожалуйста, попробуйте еще раз.",
       "phone_number_share_declined": "Отправка номера телефона отклонена.",
-      "telegram_webapp_not_available": "Telegram WebApp недоступен."
+      "telegram_webapp_not_available": "Telegram WebApp недоступен.",
+      "phone_number_request_sent": "Запрос номера телефона отправлен. Пожалуйста, проверьте запрос Telegram."
     }
   }
 };

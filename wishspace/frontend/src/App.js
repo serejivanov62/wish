@@ -268,36 +268,15 @@ function App() {
 
   const [showPhoneNumberPrompt, setShowPhoneNumberPrompt] = useState(false);
 
-  const handleSharePhoneNumber = async () => {
+  const handleSharePhoneNumber = () => {
     console.log('handleSharePhoneNumber called');
     if (tg && tg.requestContact) {
       console.log('tg.requestContact is available');
-      try {
-        console.log('Calling tg.requestContact()');
-        const contact = await tg.requestContact();
-        console.log('tg.requestContact() returned:', contact);
-
-        if (contact && contact.phone_number) {
-          console.log('Phone number received:', contact.phone_number);
-          const phoneNumber = contact.phone_number;
-          axios.put('/api/users/me/phone', { phone: phoneNumber })
-            .then(response => {
-              setUser(response.data);
-              setShowPhoneNumberPrompt(false);
-              handleShowSnackbar(t('phone_number_updated_success'), 'success');
-            })
-            .catch(error => {
-              console.error('Failed to update phone number:', error);
-              handleShowSnackbar(t('phone_number_update_failed'), 'error');
-            });
-        } else {
-          console.log('Contact or phone_number missing from response.', contact);
-          handleShowSnackbar(t('phone_number_share_declined'), 'info');
-        }
-      } catch (error) {
-        console.error('Error requesting contact:', error);
-        handleShowSnackbar(t('phone_number_not_received'), 'warning');
-      }
+      // This will trigger the Telegram prompt. The actual phone number will be received via the web_app_data_updated event.
+      tg.requestContact();
+      // We don't handle the response here directly, as it's handled by the event listener.
+      // We can show a temporary message or just wait for the event.
+      handleShowSnackbar(t('phone_number_request_sent'), 'info');
     } else {
       console.log('tg or tg.requestContact not available');
       handleShowSnackbar(t('telegram_webapp_not_available'), 'error');
@@ -340,6 +319,120 @@ function App() {
         setError(t('auth_failed'));
     }
   }, [currentMockUser, t, handleShowSnackbar]); // Added handleShowSnackbar to dependencies
+
+  // Effect to listen for web_app_data_updated event
+  useEffect(() => {
+    if (!tg) return;
+
+    const handleWebAppUpdate = () => {
+      console.log('web_app_data_updated event received');
+      const phoneNumber = tg.initDataUnsafe?.user?.phone_number;
+      if (phoneNumber) {
+        console.log('Phone number found in initDataUnsafe:', phoneNumber);
+        axios.put('/api/users/me/phone', { phone: phoneNumber })
+          .then(response => {
+            setUser(response.data);
+            setShowPhoneNumberPrompt(false);
+            handleShowSnackbar(t('phone_number_updated_success'), 'success');
+          })
+          .catch(error => {
+            console.error('Failed to update phone number from web_app_data_updated:', error);
+            handleShowSnackbar(t('phone_number_update_failed'), 'error');
+          });
+      } else {
+        console.log('Phone number not found in initDataUnsafe after update.');
+      }
+    };
+
+    tg.onEvent('web_app_data_updated', handleWebAppUpdate);
+
+    return () => {
+      tg.offEvent('web_app_data_updated', handleWebAppUpdate);
+    };
+  }, [t, handleShowSnackbar, setUser, setShowPhoneNumberPrompt]); // Dependencies for this useEffect
+
+  const handleViewFriendWishes = (friend) => {
+    setSelectedFriend(friend);
+    setView('friend_wishes');
+  }
+
+  const renderView = () => {
+    if (!user) return <Typography>{t('loading')}</Typography>;
+
+    switch (view) {
+      case 'items':
+        return <Items user={user} onShowSnackbar={handleShowSnackbar} />;
+      case 'events':
+        return <Events user={user} onShowSnackbar={handleShowSnackbar} />;
+      case 'friends':
+        return <Friends user={user} onViewFriendWishes={handleViewFriendWishes} onShowSnackbar={handleShowSnackbar} />;
+      case 'friend_wishes':
+        return <FriendWishlistView user={user} friend={selectedFriend} onBack={() => setView('friends')} onShowSnackbar={handleShowSnackbar} />;
+      default:
+        return <Items user={user} />;
+    }
+  }
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
+        <AppBar position="static" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: '1px solid #E0E0E0' }}>
+          <Toolbar>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: 'text.primary' }}>
+              {t('welcome_message')}
+            </Typography>
+            {/* Top right icons/profile from reference image could go here */}
+          </Toolbar>
+        </AppBar>
+        <Container maxWidth="sm" sx={{ mt: 4, flexGrow: 1 }}> {/* Changed to sm for single column focus */}
+          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+          {user ? (
+            <Stack spacing={3}> {/* Use Stack for vertical spacing of cards */}
+              {/* Profile Card */}
+              <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                <Avatar alt={user.name} src={user.avatar_url} sx={{ width: 80, height: 80, mb: 2 }} />
+                <Typography variant="h4" gutterBottom>{t('welcome_user', { name: user.name || user.first_name })}</Typography>
+                {isDevEnv && (
+                    <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 2 }}>
+                        <Button variant="outlined" size="small" onClick={() => setCurrentMockUser(dev_user_data_1)}>User 1</Button>
+                        <Button variant="outlined" size="small" onClick={() => setCurrentMockUser(dev_user_data_2)}>User 2</Button>
+                    </Stack>
+                )}
+                {/* Placeholder for activity/progress from reference */}
+                <Typography variant="h6" sx={{ mt: 2 }}>78%</Typography>
+                <Typography variant="body2" color="text.secondary">Total month activity</Typography>
+              </Paper>
+
+              {/* Navigation Tabs */}
+              {view !== 'friend_wishes' && (
+                  <Paper sx={{ p: 2 }}>
+                      <Stack direction="row" spacing={1} justifyContent="space-around">
+                          <Button variant={view === 'items' ? "contained" : "text"} onClick={() => setView('items')}>{t('my_wishes')}</Button>
+                          <Button variant={view === 'events' ? "contained" : "text"} onClick={() => setView('events')}>{t('my_events')}</Button>
+                          <Button variant={view === 'friends' ? "contained" : "text"} onClick={() => setView('friends')}>{t('friends')}</Button>
+                      </Stack>
+                  </Paper>
+              )}
+
+              {/* Rendered View Content */}
+              <Paper sx={{ p: 3 }}> {/* Wrap content in a Paper card */}
+                {renderView()}
+              </Paper>
+            </Stack>
+          ) : (
+            <Typography>{t('authenticating')}</Typography>
+          )}
+        </Container>
+      </Box>
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
+        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
+    </ThemeProvider>
+  );
+}
 
   // ... rest of App component ...
 
