@@ -163,7 +163,7 @@ def read_users_me(current_user: models.User = Depends(get_current_user)):
         "name": current_user.name,
         "phone": current_user.phone,
         "avatar_url": current_user.avatar_url,
-        "created_at": current_user.created_at
+        "created_at": current_user.created_at.isoformat()
     }
 
 app.include_router(auth_router)
