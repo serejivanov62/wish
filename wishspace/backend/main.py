@@ -168,24 +168,12 @@ logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 # ... inside read_users_me ...
-@auth_router.get("/api/users/me", response_model=schemas.User)
-def read_users_me(current_user: models.User = Depends(get_current_user),
-    local_kw: Optional[str] = None):
-    try:
-        validated_user = schemas.User.model_validate(current_user) # For Pydantic v2
-        return validated_user # Return the validated object
-    except ValidationError as e:
-        # Raise HTTPException with the detailed Pydantic errors
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=e.errors()
-        )
-    except Exception as e:
-        # Catch any other unexpected errors
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"An unexpected error occurred: {e}"
-        )
+@auth_router.get("/api/users/me")
+def read_users_me(
+    current_user: models.User = Depends(get_current_user),
+    local_kw: Optional[str] = None
+):
+    return {"message": "User data fetched successfully"}
 
 app.include_router(auth_router)
 
