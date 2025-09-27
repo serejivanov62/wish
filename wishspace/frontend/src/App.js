@@ -269,10 +269,16 @@ function App() {
   const [showPhoneNumberPrompt, setShowPhoneNumberPrompt] = useState(false);
 
   const handleSharePhoneNumber = async () => {
+    console.log('handleSharePhoneNumber called');
     if (tg && tg.requestContact) {
+      console.log('tg.requestContact is available');
       try {
+        console.log('Calling tg.requestContact()');
         const contact = await tg.requestContact();
+        console.log('tg.requestContact() returned:', contact);
+
         if (contact && contact.phone_number) {
+          console.log('Phone number received:', contact.phone_number);
           const phoneNumber = contact.phone_number;
           axios.put('/api/users/me/phone', { phone: phoneNumber })
             .then(response => {
@@ -285,6 +291,7 @@ function App() {
               handleShowSnackbar(t('phone_number_update_failed'), 'error');
             });
         } else {
+          console.log('Contact or phone_number missing from response.', contact);
           handleShowSnackbar(t('phone_number_share_declined'), 'info');
         }
       } catch (error) {
@@ -292,6 +299,7 @@ function App() {
         handleShowSnackbar(t('phone_number_not_received'), 'warning');
       }
     } else {
+      console.log('tg or tg.requestContact not available');
       handleShowSnackbar(t('telegram_webapp_not_available'), 'error');
     }
   };
