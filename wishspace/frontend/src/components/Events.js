@@ -71,10 +71,17 @@ function EventDetailView({ user, event, onBack, onEventUpdated, onEventDeleted, 
     const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
 
     const fetchAvailableItems = useCallback(() => {
-
-    useEffect(() => {
-        fetchAvailableItems();
-    }, [fetchAvailableItems]);
+        axios.get(`/api/items`)
+            .then(response => {
+                const currentEventItemIds = new Set(eventItems.map(item => item.id));
+                const filteredItems = response.data.filter(item => !currentEventItemIds.has(item.id));
+                setAvailableItems(filteredItems);
+                if (filteredItems.length > 0) {
+                    setSelectedItemId(filteredItems[0].id);
+                }
+            })
+            .catch(err => console.error('Failed to fetch available items', err));
+    }, [eventItems]);
 
     const handleAddItemToEvent = () => {
         if (!selectedItemId) return;
