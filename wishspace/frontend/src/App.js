@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useTranslation } from 'react-i18next';
-import logo from './logo.svg';
 
 // MUI Imports
 import { createTheme, ThemeProvider } from '@mui/material/styles';
