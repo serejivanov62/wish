@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "${APP_PORT:-8001}:8001"
+    volumes:
+      - ./wishspace.db:/app/wishspace.db
+    env_file:
+      - ./.env
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
