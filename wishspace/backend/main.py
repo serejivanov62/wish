@@ -11,13 +11,17 @@ from datetime import datetime, timedelta
 import json
 import requests # Added for Telegram Bot API interaction
 import re # Added for URL pattern matching
-from pydantic import BaseModel # Added to resolve NameError
+from pydantic import BaseModel, ValidationError # Added to resolve NameError
 
 from jose import JWTError, jwt
 
 import models, schemas, crud
 from database import SessionLocal, engine
 from services.firecrawl import scrape_url
+
+# Configure logging (at the top of main.py, after imports)
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -179,11 +183,12 @@ def read_users_me(current_user: models.User = Depends(get_current_user)):
 
     # Attempt manual Pydantic validation for more detailed error
     try:
-        # Assuming Pydantic v2 for model_validate, if v1 use from_orm
-        validated_user = schemas.User.model_validate(current_user)
+        validated_user = schemas.User.model_validate(current_user) # For Pydantic v2
         logger.debug(f"Manual Pydantic validation successful: {validated_user}")
+    except ValidationError as e:
+        logger.error(f"Manual Pydantic validation failed: {e.errors()}", exc_info=True)
     except Exception as e:
-        logger.error(f"Manual Pydantic validation failed: {e}", exc_info=True)
+        logger.error(f"An unexpected error occurred during manual Pydantic validation: {e}", exc_info=True)
 
     return current_user
 
