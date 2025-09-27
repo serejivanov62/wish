@@ -120,7 +120,7 @@ def auth_via_telegram(auth_data: schemas.TelegramAuthData, db: Session = Depends
                 mock_user_data = {
                     "telegram_id": mock_user_id,
                     "name": f"Mock User {mock_user_id}",
-                    "phone": f"+" + str(mock_user_id),
+                    "phone": f"+" + str(mock_user_id) + "0", # Ensure 10+ digits for mock phone
                     "avatar_url": None
                 }
                 mock_user = crud.create_user(db, schemas.UserCreate(**mock_user_data))
