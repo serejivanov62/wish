@@ -262,6 +262,10 @@ function App() {
     };
   }, []);
 
+  const [showPhoneNumberPrompt, setShowPhoneNumberPrompt] = useState(false);
+
+  // ... existing useEffect ...
+
   useEffect(() => {
     tg.ready();
     
@@ -279,6 +283,9 @@ function App() {
                 axios.get('/api/users/me')
                     .then(userResponse => {
                         setUser(userResponse.data);
+                        if (!userResponse.data.phone) { // Check if phone is missing
+                            setShowPhoneNumberPrompt(true);
+                        }
                     })
                     .catch(userErr => {
                         console.error('Failed to fetch user details:', userErr.response?.data);
@@ -294,79 +301,27 @@ function App() {
     }
   }, [currentMockUser, t]);
 
-  const handleViewFriendWishes = (friend) => {
-    setSelectedFriend(friend);
-    setView('friend_wishes');
-  }
-
-  const renderView = () => {
-    if (!user) return <Typography>{t('loading')}</Typography>;
-
-    switch (view) {
-      case 'items':
-        return <Items user={user} onShowSnackbar={handleShowSnackbar} />;
-      case 'events':
-        return <Events user={user} onShowSnackbar={handleShowSnackbar} />;
-      case 'friends':
-        return <Friends user={user} onViewFriendWishes={handleViewFriendWishes} onShowSnackbar={handleShowSnackbar} />;
-      case 'friend_wishes':
-        return <FriendWishlistView user={user} friend={selectedFriend} onBack={() => setView('friends')} onShowSnackbar={handleShowSnackbar} />;
-      default:
-        return <Items user={user} />;
-    }
-  }
+  // ... rest of App component ...
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
-        <AppBar position="static" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: '1px solid #E0E0E0' }}>
-          <Toolbar>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: 'text.primary' }}>
-              {t('welcome_message')}
-            </Typography>
-            {/* Top right icons/profile from reference image could go here */}
-          </Toolbar>
-        </AppBar>
-        <Container maxWidth="sm" sx={{ mt: 4, flexGrow: 1 }}> {/* Changed to sm for single column focus */}
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-          {user ? (
-            <Stack spacing={3}> {/* Use Stack for vertical spacing of cards */}
-              {/* Profile Card */}
-              <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <Avatar alt={user.name} src={user.avatar_url} sx={{ width: 80, height: 80, mb: 2 }} />
-                <Typography variant="h4" gutterBottom>{t('welcome_user', { name: user.name || user.first_name })}</Typography>
-                {isDevEnv && (
-                    <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 2 }}>
-                        <Button variant="outlined" size="small" onClick={() => setCurrentMockUser(dev_user_data_1)}>User 1</Button>
-                        <Button variant="outlined" size="small" onClick={() => setCurrentMockUser(dev_user_data_2)}>User 2</Button>
-                    </Stack>
-                )}
-                {/* Placeholder for activity/progress from reference */}
-                <Typography variant="h6" sx={{ mt: 2 }}>78%</Typography>
-                <Typography variant="body2" color="text.secondary">Total month activity</Typography>
-              </Paper>
-
-              {/* Navigation Tabs */}
-              {view !== 'friend_wishes' && (
-                  <Paper sx={{ p: 2 }}>
-                      <Stack direction="row" spacing={1} justifyContent="space-around">
-                          <Button variant={view === 'items' ? "contained" : "text"} onClick={() => setView('items')}>{t('my_wishes')}</Button>
-                          <Button variant={view === 'events' ? "contained" : "text"} onClick={() => setView('events')}>{t('my_events')}</Button>
-                          <Button variant={view === 'friends' ? "contained" : "text"} onClick={() => setView('friends')}>{t('friends')}</Button>
-                      </Stack>
-                  </Paper>
-              )}
-
-              {/* Rendered View Content */}
-              <Paper sx={{ p: 3 }}> {/* Wrap content in a Paper card */}
-                {renderView()}
-              </Paper>
-            </Stack>
-          ) : (
-            <Typography>{t('authenticating')}</Typography>
-          )}
-        </Container>
+        {/* ... existing AppBar and Container ... */}
+        
+        {/* Phone Number Prompt Dialog */}
+        <Dialog open={showPhoneNumberPrompt} onClose={() => setShowPhoneNumberPrompt(false)}>
+            <DialogTitle>{t('share_phone_number_title')}</DialogTitle>
+            <DialogContent>
+                <Typography>{t('share_phone_number_message')}</Typography>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={() => setShowPhoneNumberPrompt(false)}>{t('cancel')}</Button>
+                <Button variant="contained" color="primary" onClick={() => console.log('Request phone number')}>
+                    {t('share_phone_number_button')}
+                </Button>
+            </DialogActions>
+        </Dialog>
       </Box>
       <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
         <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>

@@ -176,6 +176,17 @@ def read_users_me(
 ):
     return current_user
 
+@auth_router.put("/api/users/me/phone", response_model=schemas.User)
+def update_my_phone(
+    phone_data: schemas.UserUpdatePhone,
+    current_user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    updated_user = crud.update_user_phone(db, current_user.id, phone_data.phone)
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return updated_user
+
 app.include_router(auth_router)
 
 # --- Items Router ---

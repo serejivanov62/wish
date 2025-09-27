@@ -91,6 +91,9 @@ class User(BaseModel):
     class Config:
         from_attributes = True
 
+class UserUpdatePhone(BaseModel):
+    phone: constr(pattern=r"^\+\d{10,15}$")
+
 # Shared Event Schemas
 class EventCollaboratorAdd(BaseModel):
     collaborator_id: int

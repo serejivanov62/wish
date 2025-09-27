@@ -43,6 +43,15 @@ def get_or_create_user(db: Session, user: schemas.UserCreate):
     print(f"DEBUG: User {user.telegram_id} not found, creating new.")
     return create_user(db, user)
 
+def update_user_phone(db: Session, user_id: int, phone: str):
+    db_user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not db_user:
+        return None
+    db_user.phone = phone
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
 # Category CRUD
 def get_or_create_category(db: Session, category_name: str, user_id: int):
     db_category = db.query(models.Category).filter(models.Category.name == category_name, models.Category.user_id == user_id).first()
