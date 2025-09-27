@@ -1,3 +1,4 @@
+import logging
 from fastapi import FastAPI, Depends, HTTPException, APIRouter, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
