@@ -77,7 +77,7 @@ class Friend(BaseModel):
 # User Schemas
 class UserCreate(BaseModel):
     telegram_id: int
-    name: constr(min_length=1, max_length=255)
+    name: str
     phone: Optional[constr(pattern=r"^\+\d{10,15}$")] = None
     avatar_url: Optional[HttpUrl] = None
 
