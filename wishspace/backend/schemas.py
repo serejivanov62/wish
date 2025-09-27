@@ -38,7 +38,6 @@ class Item(ItemBase):
     id: int
     user_id: int
     category_id: Optional[int] = None
-    is_booked: Optional[bool] = Field(False, alias='is_booked')
 
     class Config:
         from_attributes = True
