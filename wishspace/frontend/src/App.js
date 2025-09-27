@@ -281,7 +281,7 @@ function App() {
                         setUser(userResponse.data);
                     })
                     .catch(userErr => {
-                        console.error('Failed to fetch user details:', userErr);
+                        console.error('Failed to fetch user details:', userErr.response?.data);
                         setError(t('auth_failed'));
                     });
             })
