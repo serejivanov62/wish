@@ -268,30 +268,29 @@ function App() {
 
   const [showPhoneNumberPrompt, setShowPhoneNumberPrompt] = useState(false);
 
-  const handleSharePhoneNumber = () => {
+  const handleSharePhoneNumber = async () => {
     if (tg && tg.requestContact) {
-      tg.requestContact((isShared) => {
-        if (isShared) {
-          // After successful sharing, the phone number should be available in tg.initDataUnsafe.user
-          const phoneNumber = tg.initDataUnsafe?.user?.phone_number;
-          if (phoneNumber) {
-            axios.put('/api/users/me/phone', { phone: phoneNumber })
-              .then(response => {
-                setUser(response.data);
-                setShowPhoneNumberPrompt(false);
-                handleShowSnackbar(t('phone_number_updated_success'), 'success');
-              })
-              .catch(error => {
-                console.error('Failed to update phone number:', error);
-                handleShowSnackbar(t('phone_number_update_failed'), 'error');
-              });
-          } else {
-            handleShowSnackbar(t('phone_number_not_received'), 'warning');
-          }
+      try {
+        const contact = await tg.requestContact();
+        if (contact && contact.phone_number) {
+          const phoneNumber = contact.phone_number;
+          axios.put('/api/users/me/phone', { phone: phoneNumber })
+            .then(response => {
+              setUser(response.data);
+              setShowPhoneNumberPrompt(false);
+              handleShowSnackbar(t('phone_number_updated_success'), 'success');
+            })
+            .catch(error => {
+              console.error('Failed to update phone number:', error);
+              handleShowSnackbar(t('phone_number_update_failed'), 'error');
+            });
         } else {
           handleShowSnackbar(t('phone_number_share_declined'), 'info');
         }
-      });
+      } catch (error) {
+        console.error('Error requesting contact:', error);
+        handleShowSnackbar(t('phone_number_not_received'), 'warning');
+      }
     } else {
       handleShowSnackbar(t('telegram_webapp_not_available'), 'error');
     }
