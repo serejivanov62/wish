@@ -32,7 +32,7 @@ const dev_user_data_1 = {
   last_name: 'User 1',
   username: 'dev_user_1',
   language_code: 'en',
-  phone: '+1234567890',
+  phone: '+9999999990',
   avatar_url: 'https://i.pravatar.cc/150?img=1' // Example avatar
 };
 
@@ -42,7 +42,7 @@ const dev_user_data_2 = {
   last_name: 'User 2',
   username: 'test_user_2',
   language_code: 'en',
-  phone: '+0987654321',
+  phone: '+8888888880',
   avatar_url: 'https://i.pravatar.cc/150?img=2' // Example avatar
 };
 

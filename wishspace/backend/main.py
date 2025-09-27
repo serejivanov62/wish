@@ -103,13 +103,7 @@ def validate_telegram_init_data(init_data: str, bot_token: str) -> Optional[dict
             return user_data
     return None
 
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+
 
 app = FastAPI()
 

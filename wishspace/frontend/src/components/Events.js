@@ -242,7 +242,7 @@ export default function Events({ user, onShowSnackbar }) {
     const [selectedEvent, setSelectedEvent] = useState(null);
 
     const fetchEvents = useCallback(() => {
-        if (!user) return;
+        if (!user || !user.id) return;
         axios.get(`/api/users/${user.id}/events`)
             .then(response => {
                 setEvents(response.data);

@@ -184,7 +184,7 @@ def add_friend(db: Session, user_id: int, friend_phone: str):
 
     # Add friendship in both directions
     db.add(models.Friend(user_id=user_id, friend_id=friend_user.id))
-    db.add(models.Friend(user_id=friend_user.id, friend_id=friend_user.id))
+    db.add(models.Friend(user_id=friend_user.id, friend_id=user_id))
     db.commit()
     print(f"DEBUG: Friendship created between {user_id} and {friend_user.id}")
 
