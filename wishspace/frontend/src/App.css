@@ -1,0 +1,17 @@
+.App {
+  text-align: center;
+}
+
+/* Basic layout adjustments if needed, most styling will come from MUI */
+.MuiContainer-root {
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.MuiPaper-root {
+  margin-bottom: 20px;
+}
+
+.MuiButton-root {
+  text-transform: none; /* Keep button text as is */
+}
