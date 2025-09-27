@@ -157,14 +157,7 @@ def auth_via_telegram(auth_data: schemas.TelegramAuthData, db: Session = Depends
 
 @auth_router.get("/api/users/me", response_model=schemas.User)
 def read_users_me(current_user: models.User = Depends(get_current_user)):
-    return {
-        "id": current_user.id,
-        "telegram_id": current_user.telegram_id,
-        "name": str(current_user.name),
-        "phone": current_user.phone,
-        "avatar_url": current_user.avatar_url,
-        "created_at": current_user.created_at.isoformat()
-    }
+    return current_user
 
 app.include_router(auth_router)
 
