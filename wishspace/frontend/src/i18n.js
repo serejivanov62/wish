@@ -69,7 +69,15 @@ const resources = {
       "event_delete_failed": "Failed to delete event.",
       "event_updated_success": "Event updated successfully!",
       "friend_delete_failed": "Failed to delete friend.",
-      "friend_phone_validation_error": "Phone number must start with \"+\" and be 10-15 digits long."
+      "friend_phone_validation_error": "Phone number must start with \"+\" and be 10-15 digits long.",
+      "share_phone_number_title": "Share Phone Number",
+      "share_phone_number_message": "To use all features, please share your phone number. This will help your friends find you.",
+      "share_phone_number_button": "Share Phone Number",
+      "phone_number_updated_success": "Phone number updated successfully!",
+      "phone_number_update_failed": "Failed to update phone number.",
+      "phone_number_not_received": "Phone number not received from Telegram. Please try again.",
+      "phone_number_share_declined": "Phone number sharing declined.",
+      "telegram_webapp_not_available": "Telegram WebApp is not available."
     }
   },
   ru: {
@@ -137,7 +145,15 @@ const resources = {
       "event_deleted_success": "Событие успешно удалено!",
       "event_update_failed": "Не удалось обновить событие.",
       "friend_delete_failed": "Не удалось удалить друга.",
-      "friend_phone_validation_error": "Номер телефона должен начинаться с \"+\" и содержать от 10 до 15 цифр."
+      "friend_phone_validation_error": "Номер телефона должен начинаться с \"+\" и содержать от 10 до 15 цифр.",
+      "share_phone_number_title": "Поделиться номером телефона",
+      "share_phone_number_message": "Чтобы использовать все функции, пожалуйста, поделитесь своим номером телефона. Это поможет вашим друзьям найти вас.",
+      "share_phone_number_button": "Поделиться номером телефона",
+      "phone_number_updated_success": "Номер телефона успешно обновлен!",
+      "phone_number_update_failed": "Не удалось обновить номер телефона.",
+      "phone_number_not_received": "Номер телефона не получен от Telegram. Пожалуйста, попробуйте еще раз.",
+      "phone_number_share_declined": "Отправка номера телефона отклонена.",
+      "telegram_webapp_not_available": "Telegram WebApp недоступен."
     }
   }
 };

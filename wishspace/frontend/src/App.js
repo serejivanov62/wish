@@ -264,6 +264,34 @@ function App() {
 
   const [showPhoneNumberPrompt, setShowPhoneNumberPrompt] = useState(false);
 
+  const handleSharePhoneNumber = () => {
+    if (tg && tg.requestContact) {
+      tg.requestContact((isShared) => {
+        if (isShared) {
+          const phoneNumber = tg.initDataUnsafe?.user?.phone_number;
+          if (phoneNumber) {
+            axios.put('/api/users/me/phone', { phone: phoneNumber })
+              .then(response => {
+                setUser(response.data);
+                setShowPhoneNumberPrompt(false);
+                handleShowSnackbar(t('phone_number_updated_success'), 'success');
+              })
+              .catch(error => {
+                console.error('Failed to update phone number:', error);
+                handleShowSnackbar(t('phone_number_update_failed'), 'error');
+              });
+          } else {
+            handleShowSnackbar(t('phone_number_not_received'), 'warning');
+          }
+        } else {
+          handleShowSnackbar(t('phone_number_share_declined'), 'info');
+        }
+      });
+    } else {
+      handleShowSnackbar(t('telegram_webapp_not_available'), 'error');
+    }
+  };
+
   // ... existing useEffect ...
 
   useEffect(() => {
@@ -299,7 +327,7 @@ function App() {
     } else {
         setError(t('auth_failed'));
     }
-  }, [currentMockUser, t]);
+  }, [currentMockUser, t, handleShowSnackbar]); // Added handleShowSnackbar to dependencies
 
   // ... rest of App component ...
 
@@ -317,7 +345,7 @@ function App() {
             </DialogContent>
             <DialogActions>
                 <Button onClick={() => setShowPhoneNumberPrompt(false)}>{t('cancel')}</Button>
-                <Button variant="contained" color="primary" onClick={() => console.log('Request phone number')}>
+                <Button variant="contained" color="primary" onClick={handleSharePhoneNumber}>
                     {t('share_phone_number_button')}
                 </Button>
             </DialogActions>
