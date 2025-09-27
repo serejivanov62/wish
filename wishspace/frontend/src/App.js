@@ -270,20 +270,10 @@ function App() {
 
   const handleSharePhoneNumber = () => {
     if (tg && tg.requestContact) {
-      tg.requestContact((isShared, result) => { // result parameter added
+      tg.requestContact((isShared) => {
         if (isShared) {
-          let phoneNumber = null;
-          try {
-            const decodedResult = decodeURIComponent(result);
-            const contactParam = decodedResult.split('contact=')[1]?.split('&')[0];
-            if (contactParam) {
-              const contactData = JSON.parse(contactParam);
-              phoneNumber = contactData.phone_number;
-            }
-          } catch (e) {
-            console.error('Error parsing contact data:', e);
-          }
-
+          // After successful sharing, the phone number should be available in tg.initDataUnsafe.user
+          const phoneNumber = tg.initDataUnsafe?.user?.phone_number;
           if (phoneNumber) {
             axios.put('/api/users/me/phone', { phone: phoneNumber })
               .then(response => {
