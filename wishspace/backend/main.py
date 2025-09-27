@@ -174,7 +174,7 @@ def read_users_me(
     current_user: models.User = Depends(get_current_user),
     local_kw: Optional[str] = None
 ):
-    return {"message": "User data fetched successfully"}
+    return current_user
 
 app.include_router(auth_router)
 
