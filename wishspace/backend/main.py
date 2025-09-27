@@ -160,7 +160,7 @@ def read_users_me(current_user: models.User = Depends(get_current_user)):
     return {
         "id": current_user.id,
         "telegram_id": current_user.telegram_id,
-        "name": current_user.name,
+        "name": str(current_user.name),
         "phone": current_user.phone,
         "avatar_url": current_user.avatar_url,
         "created_at": current_user.created_at.isoformat()
