@@ -169,7 +169,8 @@ logger = logging.getLogger(__name__)
 
 # ... inside read_users_me ...
 @auth_router.get("/api/users/me", response_model=schemas.User)
-def read_users_me(current_user: models.User = Depends(get_current_user)):
+def read_users_me(current_user: models.User = Depends(get_current_user),
+    local_kw: Optional[str] = None):
     try:
         validated_user = schemas.User.model_validate(current_user) # For Pydantic v2
         return validated_user # Return the validated object
