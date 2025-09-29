@@ -448,7 +448,6 @@ async def telegram_webhook(request: Request, db: Session = Depends(get_db)):
             price_value = llm_extraction.get('price', 0.0)
             if isinstance(price_value, str):
                 # Попытка извлечь число из строки
-                import re
                 price_match = re.search(r'[\d\s]+[.,]?\d*', price_value.replace(' ', ''))
                 if price_match:
                     try:
