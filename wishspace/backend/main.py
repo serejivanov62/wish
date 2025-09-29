@@ -410,9 +410,57 @@ async def telegram_webhook(request: Request, db: Session = Depends(get_db)):
             scraped_data = scrape_url(url)
             llm_extraction = scraped_data.get('data', {}).get('llm_extraction', {})
             
+            # Извлечение названия с fallback вариантами
+            title = llm_extraction.get('title', '')
+            
+            # Если title пустой или "No title found", попробуем извлечь из комментария или URL
+            if not title or title == 'No title found':
+                print(f"DEBUG: Title extraction failed, trying alternatives")
+                
+                # Попробуем использовать часть комментария если он есть и содержательный
+                if comment and len(comment) > 5:
+                    # Ищем в комментарии что-то похожее на название товара
+                    comment_words = comment.split()
+                    if len(comment_words) >= 2:
+                        title = comment
+                        print(f"DEBUG: Using comment as title: {title}")
+                
+                # Если всё ещё нет названия, попробуем извлечь из URL
+                if not title or title == 'No title found':
+                    import urllib.parse
+                    url_parts = url.split('/')
+                    for part in reversed(url_parts):
+                        if part and len(part) > 10 and not part.startswith(('t', 'if0')):
+                            decoded_part = urllib.parse.unquote(part)
+                            if any(char.isalpha() for char in decoded_part):
+                                title = decoded_part.replace('-', ' ').replace('_', ' ')
+                                print(f"DEBUG: Extracted title from URL: {title}")
+                                break
+                
+                # Последний fallback - использовать домен + "Product"
+                if not title or title == 'No title found':
+                    from urllib.parse import urlparse
+                    domain = urlparse(url).netloc
+                    title = f"Product from {domain}"
+                    print(f"DEBUG: Using domain fallback title: {title}")
+            
+            # Обработка цены
+            price_value = llm_extraction.get('price', 0.0)
+            if isinstance(price_value, str):
+                # Попытка извлечь число из строки
+                import re
+                price_match = re.search(r'[\d\s]+[.,]?\d*', price_value.replace(' ', ''))
+                if price_match:
+                    try:
+                        price_value = float(price_match.group().replace(',', '.').replace(' ', ''))
+                    except:
+                        price_value = 0.0
+                else:
+                    price_value = 0.0
+            
             item_data = schemas.ItemCreate(
-                title=llm_extraction.get('title', 'No title found'),
-                price=float(llm_extraction.get('price', 0.0)),
+                title=title,
+                price=float(price_value),
                 description=llm_extraction.get('description'),
                 image_url=llm_extraction.get('image_url'),
                 link=url,
