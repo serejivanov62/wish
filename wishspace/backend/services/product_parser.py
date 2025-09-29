@@ -206,7 +206,7 @@ class ProductParser:
             return urljoin(base_url, image_url)
         
         # Try Twitter image
-        twitter_image = soup.find('meta', name='twitter:image')
+        twitter_image = soup.find('meta', attrs={'name': 'twitter:image'})
         if twitter_image and twitter_image.get('content'):
             image_url = twitter_image['content']
             return urljoin(base_url, image_url)
@@ -287,7 +287,7 @@ class ProductParser:
                 return desc
         
         # Try meta description
-        meta_desc = soup.find('meta', name='description')
+        meta_desc = soup.find('meta', attrs={'name': 'description'})
         if meta_desc and meta_desc.get('content'):
             desc = meta_desc['content'].strip()
             if desc and len(desc) > 10:
