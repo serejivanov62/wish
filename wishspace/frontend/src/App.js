@@ -272,12 +272,38 @@ function App() {
     console.log('handleSharePhoneNumber called');
     console.log('tg object:', tg);
     console.log('tg.requestContact available:', !!(tg && tg.requestContact));
+    
     if (tg && tg.requestContact) {
       console.log('tg.requestContact is available, requesting contact...');
-      // This will trigger the Telegram prompt. The actual phone number will be received via the web_app_data_updated event.
-      tg.requestContact();
-      // We don't handle the response here directly, as it's handled by the event listener.
-      // We can show a temporary message or just wait for the event.
+      
+      // Правильный способ использования requestContact с callback
+      tg.requestContact((success, response) => {
+        console.log('requestContact callback - success:', success, 'response:', response);
+        
+        if (success && response && response.contact && response.contact.phoneNumber) {
+          const phoneNumber = response.contact.phoneNumber;
+          console.log('Phone number received:', phoneNumber);
+          
+          // Нормализация номера
+          const normalizedPhone = phoneNumber.startsWith('+') ? phoneNumber : '+' + phoneNumber;
+          
+          // Сохранение номера
+          axios.put('/api/users/me/phone', { phone: normalizedPhone })
+            .then(res => {
+              setUser(res.data);
+              handleShowSnackbar(t('phone_number_updated_success'), 'success');
+            })
+            .catch(error => {
+              console.error('Failed to update phone number:', error);
+              handleShowSnackbar(t('phone_number_update_failed'), 'error');
+            });
+        } else {
+          console.log('User declined to share phone number or no phone number received');
+          handleShowSnackbar(t('phone_sharing_declined', 'Phone sharing was declined. Please try manual entry.'), 'info');
+          setShowPhoneDialog(true);
+        }
+      });
+      
       handleShowSnackbar(t('phone_number_request_sent'), 'info');
     } else {
       console.log('tg or tg.requestContact not available, showing manual input dialog...');
@@ -351,35 +377,25 @@ function App() {
     }
   }, [currentMockUser, t, handleShowSnackbar]); // Added handleShowSnackbar to dependencies
 
-  // Effect to listen for web_app_data_updated event
+  // Check if phone number is already available in initData
   useEffect(() => {
-    if (!tg) return;
+    if (!tg || !tg.initDataUnsafe) return;
 
-    const handleWebAppUpdate = () => {
-      console.log('web_app_data_updated event received');
-      const phoneNumber = tg.initDataUnsafe?.user?.phone_number;
-      if (phoneNumber) {
-        console.log('Phone number found in initDataUnsafe:', phoneNumber);
-        axios.put('/api/users/me/phone', { phone: phoneNumber })
-          .then(response => {
-            setUser(response.data);
-            handleShowSnackbar(t('phone_number_updated_success'), 'success');
-          })
-          .catch(error => {
-            console.error('Failed to update phone number from web_app_data_updated:', error);
-            handleShowSnackbar(t('phone_number_update_failed'), 'error');
-          });
-      } else {
-        console.log('Phone number not found in initDataUnsafe after update.');
-      }
-    };
-
-    tg.onEvent('web_app_data_updated', handleWebAppUpdate);
-
-    return () => {
-      tg.offEvent('web_app_data_updated', handleWebAppUpdate);
-    };
-  }, [t, handleShowSnackbar]); // Dependencies for this useEffect
+    const phoneNumber = tg.initDataUnsafe?.user?.phone_number;
+    if (phoneNumber && user && (!user.phone || user.phone === '')) {
+      console.log('Phone number found in initDataUnsafe:', phoneNumber);
+      const normalizedPhone = phoneNumber.startsWith('+') ? phoneNumber : '+' + phoneNumber;
+      
+      axios.put('/api/users/me/phone', { phone: normalizedPhone })
+        .then(response => {
+          setUser(response.data);
+          console.log('Phone number auto-updated from initData');
+        })
+        .catch(error => {
+          console.error('Failed to auto-update phone number:', error);
+        });
+    }
+  }, [user, t]); // Run when user data changes
 
   const handleViewFriendWishes = (friend) => {
     setSelectedFriend(friend);
