@@ -5,3 +5,5 @@ pydantic
 python-dotenv
 requests
 python-jose
+beautifulsoup4
+lxml

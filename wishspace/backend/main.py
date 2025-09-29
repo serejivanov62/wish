@@ -18,7 +18,7 @@ from jose import JWTError, jwt
 
 import models, schemas, crud
 from database import SessionLocal, engine
-from services.firecrawl import scrape_url
+from services.product_parser import scrape_url
 
 # Configure logging (at the top of main.py, after imports)
 logging.basicConfig(level=logging.DEBUG)
