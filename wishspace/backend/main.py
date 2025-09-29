@@ -417,24 +417,30 @@ async def telegram_webhook(request: Request, db: Session = Depends(get_db)):
             if not title or title == 'No title found':
                 print(f"DEBUG: Title extraction failed, trying alternatives")
                 
-                # Попробуем использовать часть комментария если он есть и содержательный
-                if comment and len(comment) > 5:
-                    # Ищем в комментарии что-то похожее на название товара
-                    comment_words = comment.split()
-                    if len(comment_words) >= 2:
-                        title = comment
-                        print(f"DEBUG: Using comment as title: {title}")
+                # НЕ используем комментарий как title - комментарий только для категории
+                # if comment and len(comment) > 5:
+                #     comment_words = comment.split()
+                #     if len(comment_words) >= 2:
+                #         title = comment
+                #         print(f"DEBUG: Using comment as title: {title}")
                 
                 # Если всё ещё нет названия, попробуем извлечь из URL
                 if not title or title == 'No title found':
                     import urllib.parse
                     url_parts = url.split('/')
-                    for part in reversed(url_parts):
-                        if part and len(part) > 10 and not part.startswith(('t', 'if0')):
+                    
+                    # Для Yandex Market ищем название товара в URL (обычно длинная часть с дефисами)
+                    for part in url_parts:
+                        if part and len(part) > 20 and '-' in part and not part.startswith(('card', 'cc', 'product', 't', 'if0')):
                             decoded_part = urllib.parse.unquote(part)
                             if any(char.isalpha() for char in decoded_part):
-                                title = decoded_part.replace('-', ' ').replace('_', ' ')
-                                print(f"DEBUG: Extracted title from URL: {title}")
+                                # Очищаем и форматируем название
+                                clean_title = decoded_part.replace('-', ' ').replace('_', ' ')
+                                # Удаляем числовые части в конце (обычно ID товара)
+                                clean_title = re.sub(r'\s+\d+$', '', clean_title)
+                                # Делаем первые буквы заглавными
+                                title = ' '.join(word.capitalize() for word in clean_title.split())
+                                print(f"DEBUG: Extracted title from URL part '{part}': {title}")
                                 break
                 
                 # Последний fallback - использовать домен + "Product"

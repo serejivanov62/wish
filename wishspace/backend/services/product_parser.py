@@ -244,10 +244,12 @@ class ProductParser:
         title_tag = soup.find('title')
         if title_tag:
             title = title_tag.get_text(strip=True)
+            print(f"DEBUG: Raw page title: {title}")
             # Clean up title (remove site name, etc.)
-            title = re.sub(r'\s*[\|\-]\s*(купить|Ozon|Wildberries|Яндекс\.Маркет|DNS|М\.Видео).*$', '', title, flags=re.IGNORECASE)
-            if title and len(title) > 5:
-                return title
+            cleaned_title = re.sub(r'\s*[\|\-]\s*(купить|Ozon|Wildberries|Яндекс\.Маркет|DNS|М\.Видео|купить в Москве|цена|отзывы).*$', '', title, flags=re.IGNORECASE)
+            print(f"DEBUG: Cleaned page title: {cleaned_title}")
+            if cleaned_title and len(cleaned_title) > 5:
+                return cleaned_title
         
         # Try h1 tag
         h1 = soup.find('h1')
@@ -261,8 +263,14 @@ class ProductParser:
             '[data-widget="webProductHeading"] h1',  # Ozon
             '.product-page__title',  # Wildberries
             '[data-auto="productTitle"]',  # Yandex Market
+            'h1[data-auto="productTitle"]',  # Yandex Market variant
+            'h1[data-zone-name="productTitle"]',  # Yandex Market new
+            '.pdp-product-title h1',  # Yandex Market
             '.product-card-top__title',  # DNS
-            '.product-title'  # Generic
+            '.product-title',  # Generic
+            'h1',  # Last resort h1
+            '[data-baobab-name="title"]',  # Yandex specific
+            '.n-snippet-card2__title'  # Yandex snippet
         ]
         
         for selector in title_selectors:
@@ -270,9 +278,12 @@ class ProductParser:
                 element = soup.select_one(selector)
                 if element:
                     title = element.get_text(strip=True)
+                    print(f"DEBUG: Found element with selector {selector}: {title[:100]}")
                     if title and len(title) > 5:
+                        print(f"DEBUG: Using title from selector {selector}: {title}")
                         return title
-            except:
+            except Exception as e:
+                print(f"DEBUG: Error with selector {selector}: {e}")
                 continue
         
         return None
