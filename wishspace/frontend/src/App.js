@@ -20,6 +20,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogTitle from '@mui/material/DialogTitle';
 import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
+import TextField from '@mui/material/TextField';
 
 import Items from './components/Items';
 import Events from './components/Events';
@@ -239,6 +240,8 @@ function App() {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [showPhoneDialog, setShowPhoneDialog] = useState(false);
+  const [manualPhone, setManualPhone] = useState('');
 
   const handleShowSnackbar = useCallback((message, severity) => {
     setSnackbarMessage(message);
@@ -265,23 +268,51 @@ function App() {
     };
   }, []);
 
-  // eslint-disable-next-line no-unused-vars
-  const [showPhoneNumberPrompt, setShowPhoneNumberPrompt] = useState(false);
-
-  // eslint-disable-next-line no-unused-vars
   const handleSharePhoneNumber = () => {
     console.log('handleSharePhoneNumber called');
+    console.log('tg object:', tg);
+    console.log('tg.requestContact available:', !!(tg && tg.requestContact));
     if (tg && tg.requestContact) {
-      console.log('tg.requestContact is available');
+      console.log('tg.requestContact is available, requesting contact...');
       // This will trigger the Telegram prompt. The actual phone number will be received via the web_app_data_updated event.
       tg.requestContact();
       // We don't handle the response here directly, as it's handled by the event listener.
       // We can show a temporary message or just wait for the event.
       handleShowSnackbar(t('phone_number_request_sent'), 'info');
     } else {
-      console.log('tg or tg.requestContact not available');
-      handleShowSnackbar(t('telegram_webapp_not_available'), 'error');
+      console.log('tg or tg.requestContact not available, showing manual input dialog...');
+      setShowPhoneDialog(true);
     }
+  };
+
+  const handleManualPhoneSubmit = () => {
+    if (!manualPhone || manualPhone.trim() === '') {
+      handleShowSnackbar(t('phone_number_required'), 'error');
+      return;
+    }
+
+    // Normalize phone number
+    const normalizePhone = (phoneNum) => {
+      let normalized = phoneNum.replace(/[^\d+]/g, '');
+      if (!normalized.startsWith('+')) {
+        normalized = '+' + normalized;
+      }
+      return normalized;
+    };
+
+    const normalizedPhone = normalizePhone(manualPhone);
+    
+    axios.put('/api/users/me/phone', { phone: normalizedPhone })
+      .then(response => {
+        setUser(response.data);
+        setShowPhoneDialog(false);
+        setManualPhone('');
+        handleShowSnackbar(t('phone_number_updated_success'), 'success');
+      })
+      .catch(error => {
+        console.error('Failed to update phone number manually:', error);
+        handleShowSnackbar(t('phone_number_update_failed'), 'error');
+      });
   };
 
   // ... existing useEffect ...
@@ -303,9 +334,8 @@ function App() {
                 axios.get('/api/users/me')
                     .then(userResponse => {
                         setUser(userResponse.data);
-                        if (!userResponse.data.phone) { // Check if phone is missing
-                            setShowPhoneNumberPrompt(true);
-                        }
+                        console.log('User data after fetch:', userResponse.data);
+                        console.log('User phone:', userResponse.data.phone);
                     })
                     .catch(userErr => {
                         console.error('Failed to fetch user details:', userErr.response?.data);
@@ -333,7 +363,6 @@ function App() {
         axios.put('/api/users/me/phone', { phone: phoneNumber })
           .then(response => {
             setUser(response.data);
-            setShowPhoneNumberPrompt(false);
             handleShowSnackbar(t('phone_number_updated_success'), 'success');
           })
           .catch(error => {
@@ -350,7 +379,7 @@ function App() {
     return () => {
       tg.offEvent('web_app_data_updated', handleWebAppUpdate);
     };
-  }, [t, handleShowSnackbar, setUser, setShowPhoneNumberPrompt]); // Dependencies for this useEffect
+  }, [t, handleShowSnackbar]); // Dependencies for this useEffect
 
   const handleViewFriendWishes = (friend) => {
     setSelectedFriend(friend);
@@ -394,6 +423,38 @@ function App() {
               <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                 <Avatar alt={user.name} src={user.avatar_url} sx={{ width: 80, height: 80, mb: 2 }} />
                 <Typography variant="h4" gutterBottom>{t('welcome_user', { name: user.name || user.first_name })}</Typography>
+                
+                {/* Phone Number Prompt */}
+                {(!user.phone || user.phone === '') && (
+                  <Box sx={{ mb: 2, textAlign: 'center' }}>
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      {t('phone_number_required_message', 'Please share your phone number to let friends find you')}
+                    </Alert>
+                    <Stack direction="row" spacing={1} justifyContent="center">
+                      <Button 
+                        variant="contained" 
+                        color="primary" 
+                        onClick={handleSharePhoneNumber}
+                      >
+                        {t('share_phone_number', 'Share Phone Number')}
+                      </Button>
+                      <Button 
+                        variant="outlined" 
+                        color="primary" 
+                        onClick={() => setShowPhoneDialog(true)}
+                      >
+                        {t('enter_manually', 'Enter Manually')}
+                      </Button>
+                    </Stack>
+                  </Box>
+                )}
+                
+                {user.phone && (
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    {t('phone_number', 'Phone')}: {user.phone}
+                  </Typography>
+                )}
+                
                 {isDevEnv && (
                     <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 2 }}>
                         <Button variant="outlined" size="small" onClick={() => setCurrentMockUser(dev_user_data_1)}>User 1</Button>
@@ -431,6 +492,36 @@ function App() {
           {snackbarMessage}
         </Alert>
       </Snackbar>
+
+      {/* Manual Phone Number Dialog */}
+      <Dialog open={showPhoneDialog} onClose={() => setShowPhoneDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>{t('enter_phone_number', 'Enter Your Phone Number')}</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            {t('phone_number_help', 'Enter your phone number with country code (e.g., +1234567890)')}
+          </Typography>
+          <TextField
+            autoFocus
+            margin="dense"
+            label={t('phone_number', 'Phone Number')}
+            type="tel"
+            fullWidth
+            variant="outlined"
+            value={manualPhone}
+            onChange={(e) => setManualPhone(e.target.value)}
+            placeholder="+1234567890"
+            helperText={t('phone_format_help', 'Format: +[country code][number]')}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowPhoneDialog(false)}>
+            {t('cancel', 'Cancel')}
+          </Button>
+          <Button onClick={handleManualPhoneSubmit} variant="contained">
+            {t('save', 'Save')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </ThemeProvider>
   );
 }
