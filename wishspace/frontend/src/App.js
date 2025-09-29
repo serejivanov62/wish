@@ -52,95 +52,171 @@ const dev_user_data_2 = {
 
 const isDevEnv = !tg.initDataUnsafe?.user;
 
-// --- Custom MUI Theme (inspired by reference image) ---
+// --- Custom MUI Theme - Modern and Clean ---
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#FF6B6B', // Soft coral/orange from reference
+      main: '#6366F1', // Modern indigo
+      light: '#818CF8',
+      dark: '#4F46E5',
       contrastText: '#fff',
     },
     secondary: {
-      main: '#4ECDC4', // Teal accent
+      main: '#EC4899', // Modern pink
+      light: '#F472B6',
+      dark: '#DB2777',
       contrastText: '#fff',
     },
+    success: {
+      main: '#10B981',
+      light: '#34D399',
+      dark: '#059669',
+    },
+    warning: {
+      main: '#F59E0B',
+      light: '#FBBF24',
+      dark: '#D97706',
+    },
+    error: {
+      main: '#EF4444',
+      light: '#F87171',
+      dark: '#DC2626',
+    },
     background: {
-      default: '#F0F2F5', // Very light grey background, slightly darker than cards
-      paper: '#FFFFFF', // White for cards
+      default: '#F8FAFC', // Very light grey-blue
+      paper: '#FFFFFF',
     },
     text: {
-      primary: '#333333',
-      secondary: '#555555',
+      primary: '#1E293B',
+      secondary: '#64748B',
+      disabled: '#94A3B8',
+    },
+    grey: {
+      50: '#F8FAFC',
+      100: '#F1F5F9',
+      200: '#E2E8F0',
+      300: '#CBD5E1',
+      400: '#94A3B8',
+      500: '#64748B',
+      600: '#475569',
+      700: '#334155',
+      800: '#1E293B',
+      900: '#0F172A',
     },
   },
   typography: {
-    fontFamily: 'Inter, sans-serif', // Modern sans-serif font
+    fontFamily: '"Inter", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     h1: {
-      fontSize: '2.2rem',
+      fontSize: '2.5rem',
       fontWeight: 700,
-      color: '#333333',
+      letterSpacing: '-0.025em',
     },
     h2: {
-      fontSize: '1.8rem',
+      fontSize: '2rem',
       fontWeight: 600,
-      color: '#333333',
+      letterSpacing: '-0.025em',
     },
     h3: {
-      fontSize: '1.4rem',
-      fontWeight: 500,
-      color: '#333333',
+      fontSize: '1.5rem',
+      fontWeight: 600,
+      letterSpacing: '-0.015em',
     },
     h4: {
-      fontSize: '1.2rem',
+      fontSize: '1.25rem',
+      fontWeight: 600,
+      letterSpacing: '-0.015em',
+    },
+    h5: {
+      fontSize: '1.125rem',
       fontWeight: 500,
-      color: '#333333',
+    },
+    h6: {
+      fontSize: '1rem',
+      fontWeight: 500,
     },
     body1: {
       fontSize: '1rem',
-      color: '#555555',
+      lineHeight: 1.6,
     },
     body2: {
       fontSize: '0.875rem',
-      color: '#777777',
+      lineHeight: 1.5,
     },
   },
   shape: {
-    borderRadius: 16, // More rounded corners for all components
+    borderRadius: 12,
   },
+  shadows: [
+    'none',
+    '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+    '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+    '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
+    '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+    '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+  ],
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 12, // Rounded buttons
+          borderRadius: 8,
           textTransform: 'none',
-          boxShadow: '0 4px 8px rgba(0, 0, 0, 0.05)', // Subtle shadow
+          fontWeight: 500,
+          fontSize: '0.875rem',
+          minHeight: 40,
+          boxShadow: 'none',
           '&:hover': {
-            boxShadow: '0 6px 12px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+          },
+        },
+        contained: {
+          '&:hover': {
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
           },
         },
       },
     },
     MuiPaper: {
       defaultProps: {
-        elevation: 0, // Default to no elevation for a flatter look
+        elevation: 1,
       },
       styleOverrides: {
         root: {
-          borderRadius: 16, // Rounded cards
-          padding: '20px',
-          boxShadow: '0 4px 10px rgba(0, 0, 0, 0.05)', // Subtle shadow
-          border: '1px solid #E0E0E0', // Light border
+          borderRadius: 12,
+          border: '1px solid #E2E8F0',
+          '&.MuiPaper-elevation0': {
+            boxShadow: 'none',
+          },
+          '&.MuiPaper-elevation1': {
+            boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+          },
+        },
+      },
+    },
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          border: '1px solid #E2E8F0',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
         },
       },
     },
     MuiTextField: {
       defaultProps: {
         variant: 'outlined',
-        size: 'small',
       },
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 12,
+            borderRadius: 8,
+            fontSize: '0.875rem',
+            '&:hover .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#6366F1',
+            },
+            '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+              borderColor: '#6366F1',
+              borderWidth: 2,
+            },
           },
         },
       },
@@ -148,16 +224,16 @@ const theme = createTheme({
     MuiAppBar: {
       styleOverrides: {
         root: {
-          boxShadow: 'none',
-          borderBottom: '1px solid #E0E0E0',
           backgroundColor: '#FFFFFF',
+          boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
+          borderBottom: 'none',
         },
       },
     },
-    MuiToolbar: {
+    MuiAvatar: {
       styleOverrides: {
         root: {
-          justifyContent: 'space-between',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
         },
       },
     },
@@ -194,35 +270,106 @@ function FriendWishlistView({ user, friend, onBack, onShowSnackbar }) {
     };
 
     return (
-        <Box> {/* Added this wrapping Box */}
-            <Button variant="outlined" onClick={onBack} startIcon={<Box component="span" sx={{ transform: 'rotate(180deg)' }}>&#10140;</Box>}>
-                {t('back_to_friends')}
-            </Button>
-            <Typography variant="h3" sx={{ mt: 2, mb: 3 }}>{t('friend_wishlists', { name: friend.name })}</Typography>
-            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
-            <Stack spacing={2}>
-            {events.length > 0 ? (
-                events.map(event => (
-                    <Paper key={event.id} sx={{ p: 3, mb: 2 }}>
-                        <Typography variant="h4" gutterBottom>{event.title}</Typography>
-                        <Stack spacing={1}>
-                        {event.items.map(item => (
-                            <Paper key={item.id} elevation={0} sx={{ p: 2, bgcolor: 'background.default', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Box>
-                                    <Typography variant="body1">{item.title} - ${item.price}</Typography>
-                                    {item.link && <Typography variant="body2" color="primary"><a href={item.link} target="_blank" rel="noopener noreferrer">{t('link')}</a></Typography>}
-                                </Box>
-                                <Button variant="contained" color="secondary" onClick={() => handleBookItem(item.id)} disabled={item.is_booked}>
-                                    {t(item.is_booked ? 'booked' : 'book_gift')}
-                                </Button>
-                            </Paper>
-                        ))}
-                        </Stack>
-                    </Paper>
-                ))
-            ) : (
-                <Typography>{t('no_public_wishlists')}</Typography>
+        <Box>
+            {/* Header with back button */}
+            <Box sx={{ mb: 3 }}>
+                <Button 
+                    variant="outlined" 
+                    onClick={onBack} 
+                    startIcon={<span>←</span>}
+                    sx={{ mb: 2 }}
+                >
+                    {t('back_to_friends', 'Back to Friends')}
+                </Button>
+                <Typography variant="h4" sx={{ fontWeight: 600, color: 'text.primary' }}>
+                    🎁 {friend.name}'s Wishlists
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                    {t('browse_friend_wishes', 'Browse and book gifts for your friend')}
+                </Typography>
+            </Box>
+
+            {error && (
+                <Alert severity="error" sx={{ mb: 3, borderRadius: 2 }}>
+                    {error}
+                </Alert>
             )}
+
+            <Stack spacing={3}>
+                {events.length > 0 ? (
+                    events.map(event => (
+                        <Paper key={event.id} elevation={0} sx={{ p: 3, border: '1px solid', borderColor: 'grey.200' }}>
+                            <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+                                🎉 {event.title}
+                            </Typography>
+                            <Stack spacing={2}>
+                                {event.items.map(item => (
+                                    <Paper 
+                                        key={item.id} 
+                                        elevation={0} 
+                                        sx={{ 
+                                            p: 2, 
+                                            bgcolor: 'grey.50',
+                                            border: '1px solid',
+                                            borderColor: 'grey.200',
+                                            borderRadius: 2,
+                                            display: 'flex', 
+                                            justifyContent: 'space-between', 
+                                            alignItems: 'center',
+                                            flexDirection: { xs: 'column', sm: 'row' },
+                                            gap: 2
+                                        }}
+                                    >
+                                        <Box sx={{ flex: 1 }}>
+                                            <Typography variant="h6" sx={{ mb: 1, fontWeight: 500 }}>
+                                                {item.title}
+                                            </Typography>
+                                            {item.price > 0 && (
+                                                <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
+                                                    ${item.price}
+                                                </Typography>
+                                            )}
+                                            {item.link && (
+                                                <Typography variant="body2" sx={{ mt: 1 }}>
+                                                    <a 
+                                                        href={item.link} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        style={{ 
+                                                            color: '#6366F1', 
+                                                            textDecoration: 'none',
+                                                            fontSize: '0.875rem'
+                                                        }}
+                                                    >
+                                                        🔗 {t('view_product', 'View Product')}
+                                                    </a>
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                        <Button 
+                                            variant={item.is_booked ? "outlined" : "contained"}
+                                            color={item.is_booked ? "success" : "primary"}
+                                            onClick={() => handleBookItem(item.id)} 
+                                            disabled={item.is_booked}
+                                            sx={{ minWidth: 120 }}
+                                        >
+                                            {item.is_booked ? '✅ Booked' : '📦 Book Gift'}
+                                        </Button>
+                                    </Paper>
+                                ))}
+                            </Stack>
+                        </Paper>
+                    ))
+                ) : (
+                    <Paper elevation={0} sx={{ p: 4, textAlign: 'center', border: '1px solid', borderColor: 'grey.200' }}>
+                        <Typography variant="h6" color="text.secondary" sx={{ mb: 1 }}>
+                            📭 {t('no_public_wishlists', 'No public wishlists yet')}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                            {t('friend_no_events', 'Your friend hasn\'t created any public events yet')}
+                        </Typography>
+                    </Paper>
+                )}
             </Stack>
         </Box> 
     );
@@ -422,98 +569,358 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', bgcolor: 'background.default' }}>
-        <AppBar position="static" elevation={0} sx={{ bgcolor: 'background.paper', borderBottom: '1px solid #E0E0E0' }}>
-          <Toolbar>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1, color: 'text.primary' }}>
-              {t('welcome_message')}
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        minHeight: '100vh', 
+        bgcolor: 'background.default' 
+      }}>
+        {/* Header */}
+        <AppBar position="static" elevation={0}>
+          <Toolbar sx={{ px: { xs: 2, sm: 3 } }}>
+            <Typography 
+              variant="h6" 
+              component="div" 
+              sx={{ 
+                flexGrow: 1, 
+                color: 'text.primary',
+                fontWeight: 600,
+                letterSpacing: '-0.01em'
+              }}
+            >
+              WishSpace
             </Typography>
-            {/* Top right icons/profile from reference image could go here */}
+            {user && (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Avatar 
+                  alt={user.name} 
+                  src={user.avatar_url} 
+                  sx={{ width: 32, height: 32 }}
+                />
+              </Box>
+            )}
           </Toolbar>
         </AppBar>
-        <Container maxWidth="sm" sx={{ mt: 4, flexGrow: 1 }}> {/* Changed to sm for single column focus */}
-          {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+        {/* Main Content */}
+        <Container 
+          maxWidth="md" 
+          sx={{ 
+            flexGrow: 1, 
+            py: { xs: 2, sm: 3 },
+            px: { xs: 2, sm: 3 }
+          }}
+        >
+          {error && (
+            <Alert 
+              severity="error" 
+              sx={{ mb: 3, borderRadius: 2 }}
+            >
+              {error}
+            </Alert>
+          )}
+          
           {user ? (
-            <Stack spacing={3}> {/* Use Stack for vertical spacing of cards */}
-              {/* Profile Card */}
-              <Paper sx={{ p: 3, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                <Avatar alt={user.name} src={user.avatar_url} sx={{ width: 80, height: 80, mb: 2 }} />
-                <Typography variant="h4" gutterBottom>{t('welcome_user', { name: user.name || user.first_name })}</Typography>
-                
-                {/* Phone Number Prompt */}
+            <Box>
+              {/* Profile Section */}
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: { xs: 3, sm: 4 }, 
+                  mb: 3,
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  color: 'white',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  '&::before': {
+                    content: '""',
+                    position: 'absolute',
+                    top: 0,
+                    right: 0,
+                    width: '100px',
+                    height: '100px',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: '50%',
+                    transform: 'translate(30px, -30px)',
+                  }
+                }}
+              >
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: { xs: 'column', sm: 'row' },
+                  alignItems: { xs: 'center', sm: 'flex-start' },
+                  gap: 3,
+                  position: 'relative',
+                  zIndex: 1
+                }}>
+                  <Avatar 
+                    alt={user.name} 
+                    src={user.avatar_url} 
+                    sx={{ 
+                      width: { xs: 80, sm: 96 }, 
+                      height: { xs: 80, sm: 96 },
+                      border: '4px solid rgba(255, 255, 255, 0.2)',
+                      boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)'
+                    }} 
+                  />
+                  <Box sx={{ 
+                    textAlign: { xs: 'center', sm: 'left' },
+                    flex: 1
+                  }}>
+                    <Typography 
+                      variant="h4" 
+                      sx={{ 
+                        fontWeight: 700,
+                        mb: 1,
+                        color: 'white'
+                      }}
+                    >
+                      {user.name || user.first_name || 'Welcome'}
+                    </Typography>
+                    {user.phone && (
+                      <Typography 
+                        variant="body1" 
+                        sx={{ 
+                          opacity: 0.9,
+                          mb: 1
+                        }}
+                      >
+                        📱 {user.phone}
+                      </Typography>
+                    )}
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        opacity: 0.8
+                      }}
+                    >
+                      {t('profile_subtitle', 'Manage your wishes and connect with friends')}
+                    </Typography>
+                  </Box>
+                </Box>
+
+                {/* Phone Number Setup */}
                 {(!user.phone || user.phone === '') && (
-                  <Box sx={{ mb: 2, textAlign: 'center' }}>
-                    <Alert severity="info" sx={{ mb: 2 }}>
+                  <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                    <Alert 
+                      severity="info" 
+                      sx={{ 
+                        mb: 2,
+                        bgcolor: 'rgba(255, 255, 255, 0.15)',
+                        color: 'white',
+                        '& .MuiAlert-icon': {
+                          color: 'white'
+                        }
+                      }}
+                    >
                       {t('phone_number_required_message', 'Please share your phone number to let friends find you')}
                     </Alert>
-                    <Stack direction="row" spacing={1} justifyContent="center">
+                    <Stack 
+                      direction={{ xs: 'column', sm: 'row' }} 
+                      spacing={2} 
+                      sx={{ mt: 2 }}
+                    >
                       <Button 
                         variant="contained" 
-                        color="primary" 
                         onClick={handleSharePhoneNumber}
+                        sx={{
+                          bgcolor: 'rgba(255, 255, 255, 0.2)',
+                          color: 'white',
+                          backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          '&:hover': {
+                            bgcolor: 'rgba(255, 255, 255, 0.3)',
+                          }
+                        }}
                       >
                         {t('share_phone_number', 'Share Phone Number')}
                       </Button>
                       <Button 
                         variant="outlined" 
-                        color="primary" 
                         onClick={() => setShowPhoneDialog(true)}
+                        sx={{
+                          color: 'white',
+                          borderColor: 'rgba(255, 255, 255, 0.5)',
+                          '&:hover': {
+                            borderColor: 'white',
+                            bgcolor: 'rgba(255, 255, 255, 0.1)'
+                          }
+                        }}
                       >
                         {t('enter_manually', 'Enter Manually')}
                       </Button>
                     </Stack>
                   </Box>
                 )}
-                
-                {user.phone && (
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {t('phone_number', 'Phone')}: {user.phone}
-                  </Typography>
-                )}
-                
+
+                {/* Dev Environment Controls */}
                 {isDevEnv && (
-                    <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 2 }}>
-                        <Button variant="outlined" size="small" onClick={() => setCurrentMockUser(dev_user_data_1)}>User 1</Button>
-                        <Button variant="outlined" size="small" onClick={() => setCurrentMockUser(dev_user_data_2)}>User 2</Button>
+                  <Box sx={{ mt: 3, pt: 3, borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                    <Typography variant="body2" sx={{ mb: 2, opacity: 0.8 }}>
+                      Development Mode
+                    </Typography>
+                    <Stack direction="row" spacing={1}>
+                      <Button 
+                        variant="outlined" 
+                        size="small" 
+                        onClick={() => setCurrentMockUser(dev_user_data_1)}
+                        sx={{ 
+                          color: 'white', 
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        User 1
+                      </Button>
+                      <Button 
+                        variant="outlined" 
+                        size="small" 
+                        onClick={() => setCurrentMockUser(dev_user_data_2)}
+                        sx={{ 
+                          color: 'white', 
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                          fontSize: '0.75rem'
+                        }}
+                      >
+                        User 2
+                      </Button>
                     </Stack>
+                  </Box>
                 )}
-                {/* Placeholder for activity/progress from reference */}
-                <Typography variant="h6" sx={{ mt: 2 }}>78%</Typography>
-                <Typography variant="body2" color="text.secondary">Total month activity</Typography>
               </Paper>
 
-              {/* Navigation Tabs */}
+              {/* Navigation */}
               {view !== 'friend_wishes' && (
-                  <Paper sx={{ p: 2 }}>
-                      <Stack direction="row" spacing={1} justifyContent="space-around">
-                          <Button variant={view === 'items' ? "contained" : "text"} onClick={() => setView('items')}>{t('my_wishes')}</Button>
-                          <Button variant={view === 'events' ? "contained" : "text"} onClick={() => setView('events')}>{t('my_events')}</Button>
-                          <Button variant={view === 'friends' ? "contained" : "text"} onClick={() => setView('friends')}>{t('friends')}</Button>
-                      </Stack>
-                  </Paper>
+                <Paper 
+                  elevation={0}
+                  sx={{ 
+                    p: 1, 
+                    mb: 3,
+                    bgcolor: 'background.paper'
+                  }}
+                >
+                  <Stack 
+                    direction="row" 
+                    spacing={1} 
+                    sx={{ 
+                      justifyContent: 'center',
+                      flexWrap: 'wrap',
+                      gap: 1
+                    }}
+                  >
+                    <Button 
+                      variant={view === 'items' ? "contained" : "text"}
+                      onClick={() => setView('items')}
+                      sx={{ 
+                        minWidth: { xs: 'auto', sm: 120 },
+                        flex: { xs: 1, sm: 'none' }
+                      }}
+                    >
+                      🎁 {t('my_wishes', 'My Wishes')}
+                    </Button>
+                    <Button 
+                      variant={view === 'events' ? "contained" : "text"}
+                      onClick={() => setView('events')}
+                      sx={{ 
+                        minWidth: { xs: 'auto', sm: 120 },
+                        flex: { xs: 1, sm: 'none' }
+                      }}
+                    >
+                      🎉 {t('my_events', 'Events')}
+                    </Button>
+                    <Button 
+                      variant={view === 'friends' ? "contained" : "text"}
+                      onClick={() => setView('friends')}
+                      sx={{ 
+                        minWidth: { xs: 'auto', sm: 120 },
+                        flex: { xs: 1, sm: 'none' }
+                      }}
+                    >
+                      👥 {t('friends', 'Friends')}
+                    </Button>
+                  </Stack>
+                </Paper>
               )}
 
-              {/* Rendered View Content */}
-              <Paper sx={{ p: 3 }}> {/* Wrap content in a Paper card */}
+              {/* Content Area */}
+              <Paper 
+                elevation={0}
+                sx={{ 
+                  p: { xs: 2, sm: 3 },
+                  minHeight: 400,
+                  bgcolor: 'background.paper'
+                }}
+              >
                 {renderView()}
               </Paper>
-            </Stack>
+            </Box>
           ) : (
-            <Typography>{t('authenticating')}</Typography>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              minHeight: '60vh' 
+            }}>
+              <Typography variant="h6" color="text.secondary">
+                {t('authenticating', 'Authenticating...')}
+              </Typography>
+            </Box>
           )}
         </Container>
       </Box>
-      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
-        <Alert onClose={() => setSnackbarOpen(false)} severity={snackbarSeverity} sx={{ width: '100%' }}>
+      <Snackbar 
+        open={snackbarOpen} 
+        autoHideDuration={6000} 
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={() => setSnackbarOpen(false)} 
+          severity={snackbarSeverity} 
+          sx={{ 
+            width: '100%',
+            borderRadius: 2,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            '& .MuiAlert-icon': {
+              fontSize: '1.25rem'
+            },
+            '& .MuiAlert-message': {
+              fontSize: '0.875rem',
+              fontWeight: 500
+            }
+          }}
+          variant="filled"
+        >
           {snackbarMessage}
         </Alert>
       </Snackbar>
 
       {/* Manual Phone Number Dialog */}
-      <Dialog open={showPhoneDialog} onClose={() => setShowPhoneDialog(false)} maxWidth="sm" fullWidth>
-        <DialogTitle>{t('enter_phone_number', 'Enter Your Phone Number')}</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+      <Dialog 
+        open={showPhoneDialog} 
+        onClose={() => setShowPhoneDialog(false)} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 1
+          }
+        }}
+      >
+        <DialogTitle sx={{ 
+          textAlign: 'center',
+          pb: 1,
+          fontWeight: 600
+        }}>
+          📱 {t('enter_phone_number', 'Enter Your Phone Number')}
+        </DialogTitle>
+        <DialogContent sx={{ px: 3, pb: 2 }}>
+          <Typography 
+            variant="body2" 
+            color="text.secondary" 
+            sx={{ mb: 3, textAlign: 'center' }}
+          >
             {t('phone_number_help', 'Enter your phone number with country code (e.g., +1234567890)')}
           </Typography>
           <TextField
@@ -527,13 +934,27 @@ function App() {
             onChange={(e) => setManualPhone(e.target.value)}
             placeholder="+1234567890"
             helperText={t('phone_format_help', 'Format: +[country code][number]')}
+            sx={{
+              '& .MuiOutlinedInput-root': {
+                fontSize: '1rem',
+                fontWeight: 500
+              }
+            }}
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setShowPhoneDialog(false)}>
+        <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+          <Button 
+            onClick={() => setShowPhoneDialog(false)}
+            variant="outlined"
+            sx={{ minWidth: 100 }}
+          >
             {t('cancel', 'Cancel')}
           </Button>
-          <Button onClick={handleManualPhoneSubmit} variant="contained">
+          <Button 
+            onClick={handleManualPhoneSubmit} 
+            variant="contained"
+            sx={{ minWidth: 100 }}
+          >
             {t('save', 'Save')}
           </Button>
         </DialogActions>
