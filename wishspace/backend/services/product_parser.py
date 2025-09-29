@@ -74,6 +74,11 @@ class ProductParser:
             'citilink.ru': [
                 '.product_price__current',
                 '.price-current'
+            ],
+            'goldapple.ru': [
+                '.product-card__price-current',
+                '.price-current',
+                '.product-price__value'
             ]
         }
     
@@ -251,11 +256,13 @@ class ProductParser:
             if cleaned_title and len(cleaned_title) > 5:
                 return cleaned_title
         
-        # Try h1 tag
-        h1 = soup.find('h1')
-        if h1:
+        # Try h1 tag first (most reliable)
+        h1_tags = soup.find_all('h1')
+        for h1 in h1_tags:
             title = h1.get_text(strip=True)
-            if title and len(title) > 5:
+            print(f"DEBUG: Found H1: {title}")
+            if title and len(title) > 5 and not title.lower() in ['яндекс маркет', 'ozon', 'wildberries']:
+                print(f"DEBUG: Using H1 title: {title}")
                 return title
         
         # Try product-specific selectors
@@ -268,6 +275,8 @@ class ProductParser:
             '.pdp-product-title h1',  # Yandex Market
             '.product-card-top__title',  # DNS
             '.product-title',  # Generic
+            '.product-card__name',  # GoldApple
+            '.product-name',  # Generic
             'h1',  # Last resort h1
             '[data-baobab-name="title"]',  # Yandex specific
             '.n-snippet-card2__title'  # Yandex snippet
