@@ -61,19 +61,28 @@ class ProductParser:
     
     def get_headers(self) -> Dict[str, str]:
         """Generate realistic headers for requests"""
-        return {
+        headers = {
             'User-Agent': random.choice(self.user_agents),
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
             'Accept-Encoding': 'gzip, deflate, br',
-            'DNT': '1',
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
+            'Cache-Control': 'max-age=0',
+            'sec-ch-ua': '"Google Chrome";v="120", "Chromium";v="120", "Not:A-Brand";v="8"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"',
             'Sec-Fetch-Dest': 'document',
             'Sec-Fetch-Mode': 'navigate',
             'Sec-Fetch-Site': 'none',
-            'Cache-Control': 'max-age=0'
+            'Sec-Fetch-User': '?1'
         }
+        
+        # Add referer for some sites to look more legitimate
+        if random.choice([True, False]):
+            headers['Referer'] = 'https://www.google.com/'
+        
+        return headers
     
     def extract_price_from_text(self, text: str) -> Optional[float]:
         """Extract price from text using regex"""
@@ -236,64 +245,103 @@ class ProductParser:
         
         return None
     
-    def scrape_url(self, url: str) -> Dict:
-        """Main scraping function"""
+    def scrape_url(self, url: str, max_retries: int = 2) -> Dict:
+        """Main scraping function with retry logic"""
         print(f"DEBUG: Scraping URL with custom parser: {url}")
         
-        try:
-            # Add random delay to avoid rate limiting
-            time.sleep(random.uniform(0.5, 1.5))
-            
-            # Make request
-            response = requests.get(
-                url, 
-                headers=self.get_headers(),
-                timeout=10,
-                allow_redirects=True
-            )
-            response.raise_for_status()
-            
-            # Parse HTML
-            soup = BeautifulSoup(response.content, 'lxml')
-            domain = urlparse(url).netloc.lower()
-            
-            # Extract data
-            title = self.extract_title(soup)
-            price = self.extract_price(soup, domain)
-            description = self.extract_description(soup)
-            image_url = self.extract_image(soup, url)
-            
-            result = {
-                'success': True,
-                'data': {
-                    'llm_extraction': {
-                        'title': title,
-                        'price': price or 0.0,
-                        'description': description,
-                        'image_url': image_url
-                    },
-                    'source': 'custom_parser',
-                    'url': url
-                }
-            }
-            
-            print(f"DEBUG: Custom parser result: {result}")
-            return result
-            
-        except requests.exceptions.RequestException as e:
-            print(f"DEBUG: Request error: {e}")
-            return {
-                'success': False,
-                'error': f"Request failed: {str(e)}",
-                'data': {'llm_extraction': {}}
-            }
-        except Exception as e:
-            print(f"DEBUG: Parse error: {e}")
-            return {
-                'success': False,
-                'error': f"Parse failed: {str(e)}",
-                'data': {'llm_extraction': {}}
-            }
+        for attempt in range(max_retries + 1):
+            try:
+                # Add progressive delay for retries
+                if attempt > 0:
+                    delay = random.uniform(2, 5) * (attempt + 1)
+                    print(f"DEBUG: Retry attempt {attempt}, waiting {delay:.1f}s")
+                    time.sleep(delay)
+                else:
+                    # Initial delay
+                    time.sleep(random.uniform(0.5, 1.5))
+                
+                # Make request
+                response = requests.get(
+                    url, 
+                    headers=self.get_headers(),
+                    timeout=15,
+                    allow_redirects=True
+                )
+                
+                # Handle different response codes
+                if response.status_code == 429:
+                    print(f"DEBUG: Rate limited (429) on attempt {attempt + 1}")
+                    if attempt < max_retries:
+                        continue
+                    else:
+                        print("DEBUG: Max retries reached for rate limiting")
+                        return self._create_failed_result("Rate limited after retries")
+                
+                if response.status_code == 403:
+                    print(f"DEBUG: Access forbidden (403)")
+                    return self._create_failed_result("Access forbidden")
+                
+                response.raise_for_status()
+                
+                # Parse HTML
+                soup = BeautifulSoup(response.content, 'lxml')
+                domain = urlparse(url).netloc.lower()
+                
+                # Extract data
+                title = self.extract_title(soup)
+                price = self.extract_price(soup, domain)
+                description = self.extract_description(soup)
+                image_url = self.extract_image(soup, url)
+                
+                # Check if we got meaningful data
+                if title and len(title) > 3:
+                    result = {
+                        'success': True,
+                        'data': {
+                            'llm_extraction': {
+                                'title': title,
+                                'price': price or 0.0,
+                                'description': description,
+                                'image_url': image_url
+                            },
+                            'source': 'custom_parser',
+                            'url': url
+                        }
+                    }
+                    print(f"DEBUG: Custom parser success: {result}")
+                    return result
+                else:
+                    print(f"DEBUG: No meaningful title extracted on attempt {attempt + 1}")
+                    if attempt < max_retries:
+                        continue
+                
+            except requests.exceptions.Timeout:
+                print(f"DEBUG: Timeout on attempt {attempt + 1}")
+                if attempt < max_retries:
+                    continue
+                return self._create_failed_result("Request timeout")
+                
+            except requests.exceptions.RequestException as e:
+                print(f"DEBUG: Request error on attempt {attempt + 1}: {e}")
+                if attempt < max_retries and "429" in str(e):
+                    continue
+                return self._create_failed_result(f"Request failed: {str(e)}")
+                
+            except Exception as e:
+                print(f"DEBUG: Parse error on attempt {attempt + 1}: {e}")
+                if attempt < max_retries:
+                    continue
+                return self._create_failed_result(f"Parse failed: {str(e)}")
+        
+        return self._create_failed_result("All attempts failed")
+    
+    def _create_failed_result(self, error_message: str) -> Dict:
+        """Create a standardized failed result"""
+        return {
+            'success': False,
+            'error': error_message,
+            'data': {'llm_extraction': {}}
+        }
 
 # Create instance for easy import
 product_parser = ProductParser()
