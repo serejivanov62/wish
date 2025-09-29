@@ -137,16 +137,24 @@ class ProductParser:
                 'Origin': 'https://market.yandex.ru' if random.choice([True, False]) else None
             })
         elif domain and 'goldapple.ru' in domain:
-            # Specific headers for GoldApple
-            headers.update({
-                'Referer': 'https://goldapple.ru/',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3'
-            })
-            # Remove some headers that might trigger bot detection
-            headers.pop('sec-ch-ua', None)
-            headers.pop('sec-ch-ua-mobile', None)
-            headers.pop('sec-ch-ua-platform', None)
+            # Specific headers for GoldApple - mimic real browser more closely
+            headers = {
+                'User-Agent': random.choice([
+                    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                ]),
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'Connection': 'keep-alive',
+                'Upgrade-Insecure-Requests': '1',
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': 'none',
+                'Sec-Fetch-User': '?1',
+                'Cache-Control': 'max-age=0'
+            }
+            # Don't add referer on first visit to look more natural
         elif random.choice([True, False]):
             headers['Referer'] = random.choice(referers)
         
@@ -329,10 +337,114 @@ class ProductParser:
         
         return None
     
+    def _scrape_goldapple(self, url: str, max_retries: int = 3) -> Dict:
+        """Special method for GoldApple with two-step approach"""
+        print(f"DEBUG: Using GoldApple-specific scraping for: {url}")
+        
+        for attempt in range(max_retries + 1):
+            try:
+                if attempt > 0:
+                    delay = random.uniform(3, 6) * (attempt + 1)
+                    print(f"DEBUG: GoldApple retry attempt {attempt}, waiting {delay:.1f}s")
+                    time.sleep(delay)
+                else:
+                    time.sleep(random.uniform(1, 3))
+                
+                # Step 1: Visit main page first to get cookies
+                main_headers = {
+                    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+                    'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8',
+                    'Accept-Encoding': 'gzip, deflate, br',
+                    'Connection': 'keep-alive',
+                    'Upgrade-Insecure-Requests': '1',
+                    'Sec-Fetch-Dest': 'document',
+                    'Sec-Fetch-Mode': 'navigate',
+                    'Sec-Fetch-Site': 'none',
+                    'Sec-Fetch-User': '?1'
+                }
+                
+                print(f"DEBUG: Step 1 - Getting cookies from main page")
+                main_response = self.session.get('https://goldapple.ru/', headers=main_headers, timeout=15)
+                print(f"DEBUG: Main page status: {main_response.status_code}")
+                
+                # Small delay
+                time.sleep(random.uniform(1, 2))
+                
+                # Step 2: Now visit the product page with referer
+                product_headers = main_headers.copy()
+                product_headers.update({
+                    'Referer': 'https://goldapple.ru/',
+                    'Sec-Fetch-Site': 'same-origin'
+                })
+                
+                print(f"DEBUG: Step 2 - Getting product page")
+                response = self.session.get(url, headers=product_headers, timeout=15)
+                
+                print(f"DEBUG: Product page status: {response.status_code}")
+                
+                if response.status_code != 200:
+                    if attempt < max_retries:
+                        continue
+                    return self._create_failed_result(f"HTTP {response.status_code}")
+                
+                # Parse HTML
+                soup = BeautifulSoup(response.content, 'lxml')
+                
+                # Extract data
+                title = self.extract_title(soup)
+                price = self.extract_price(soup, 'goldapple.ru')
+                description = self.extract_description(soup)
+                image_url = self.extract_image(soup, url)
+                
+                print(f"DEBUG: GoldApple extracted - title: {title}, price: {price}")
+                
+                # Check for error/promo pages
+                if title and len(title) > 3:
+                    error_indicators = ['оформи заказ', 'доставкой', 'error', 'not found']
+                    is_error_page = any(indicator in title.lower() for indicator in error_indicators)
+                    
+                    if not is_error_page:
+                        result = {
+                            'success': True,
+                            'data': {
+                                'llm_extraction': {
+                                    'title': title,
+                                    'price': price or 0.0,
+                                    'description': description,
+                                    'image_url': image_url
+                                },
+                                'source': 'custom_parser',
+                                'url': url
+                            }
+                        }
+                        print(f"DEBUG: GoldApple parser success: {result}")
+                        return result
+                    else:
+                        print(f"DEBUG: GoldApple detected error page: {title}")
+                        if attempt < max_retries:
+                            continue
+                
+                print(f"DEBUG: GoldApple no meaningful title on attempt {attempt + 1}")
+                if attempt < max_retries:
+                    continue
+                    
+            except Exception as e:
+                print(f"DEBUG: GoldApple error on attempt {attempt + 1}: {e}")
+                if attempt < max_retries:
+                    continue
+                return self._create_failed_result(f"GoldApple parse failed: {str(e)}")
+        
+        return self._create_failed_result("GoldApple all attempts failed")
+    
     def scrape_url(self, url: str, max_retries: int = 3) -> Dict:
         """Main scraping function with advanced anti-bot protection"""
         print(f"DEBUG: Scraping URL with custom parser: {url}")
         domain = urlparse(url).netloc.lower()
+        
+        # Special handling for GoldApple - two-step approach
+        if 'goldapple.ru' in domain:
+            return self._scrape_goldapple(url, max_retries)
         
         for attempt in range(max_retries + 1):
             try:
