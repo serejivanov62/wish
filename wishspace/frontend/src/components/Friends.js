@@ -12,8 +12,19 @@ function AddFriendForm({ onFriendAdd, onShowSnackbar }) {
     const [phoneError, setPhoneError] = useState(false);
 
     const validatePhone = (phoneNum) => {
-        const phoneRegex = /^\+\d{10,15}$/;
-        return phoneRegex.test(phoneNum);
+        // More flexible validation - allow various formats
+        const phoneRegex = /^[\+]?[\d\s\-\(\)]{10,20}$/;
+        return phoneRegex.test(phoneNum.trim());
+    };
+
+    const normalizePhone = (phoneNum) => {
+        // Remove all non-digit characters except +
+        let normalized = phoneNum.replace(/[^\d+]/g, '');
+        // Add + if not present
+        if (!normalized.startsWith('+')) {
+            normalized = '+' + normalized;
+        }
+        return normalized;
     };
 
     const handleSubmit = (e) => {
@@ -32,7 +43,10 @@ function AddFriendForm({ onFriendAdd, onShowSnackbar }) {
             return;
         }
 
-        axios.post(`/api/friends`, { phone })
+        const normalizedPhone = normalizePhone(phone);
+        console.log('Searching for friend with phone:', normalizedPhone);
+        
+        axios.post(`/api/friends`, { phone: normalizedPhone })
             .then(response => {
                 onFriendAdd(response.data);
                 setPhone('');

@@ -328,6 +328,26 @@ def delete_friend(friend_id: int, current_user: models.User = Depends(get_curren
 
 app.include_router(friends_router)
 
+# --- Debug Users Router ---
+debug_router = APIRouter()
+
+@debug_router.get("/api/debug/users")
+def debug_users(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    """Debug endpoint to see all users and their phone numbers"""
+    users = db.query(models.User).all()
+    result = []
+    for user in users:
+        result.append({
+            "id": user.id,
+            "telegram_id": user.telegram_id,
+            "name": user.name,
+            "phone": user.phone,
+            "normalized_phone": crud.normalize_phone(user.phone) if user.phone else None
+        })
+    return result
+
+app.include_router(debug_router)
+
 # --- Shared Events Router ---
 shared_events_router = APIRouter()
 

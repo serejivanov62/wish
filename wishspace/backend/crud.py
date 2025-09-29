@@ -8,18 +8,46 @@ def get_user_by_telegram_id(db: Session, telegram_id: int):
     print(f"DEBUG: get_user_by_telegram_id called for telegram_id: {telegram_id}")
     return db.query(models.User).filter(models.User.telegram_id == telegram_id).first()
 
+def normalize_phone(phone: str) -> str:
+    """Normalize phone number to consistent format: +1234567890"""
+    if not phone:
+        return phone
+    # Remove all non-digit characters except +
+    normalized = ''.join(c for c in phone if c.isdigit() or c == '+')
+    # Add + if not present
+    if not normalized.startswith('+'):
+        normalized = '+' + normalized
+    return normalized
+
 def get_user_by_phone(db: Session, phone: str):
     print(f"DEBUG: get_user_by_phone called for phone: {phone}")
-    user = db.query(models.User).filter(models.User.phone == phone).first()
-    print(f"DEBUG: get_user_by_phone result: {user}")
-    return user
+    normalized_phone = normalize_phone(phone)
+    print(f"DEBUG: normalized_phone: {normalized_phone}")
+    
+    # Try exact match first
+    user = db.query(models.User).filter(models.User.phone == normalized_phone).first()
+    if user:
+        print(f"DEBUG: get_user_by_phone exact match result: {user}")
+        return user
+    
+    # Try to find by normalized phone in database
+    all_users = db.query(models.User).filter(models.User.phone.isnot(None)).all()
+    for user in all_users:
+        if normalize_phone(user.phone) == normalized_phone:
+            print(f"DEBUG: get_user_by_phone normalized match result: {user}")
+            return user
+    
+    print(f"DEBUG: get_user_by_phone no match found for: {normalized_phone}")
+    return None
 
 def create_user(db: Session, user: schemas.UserCreate):
     print(f"DEBUG: create_user called with phone: {user.phone}")
+    normalized_phone = normalize_phone(user.phone) if user.phone else None
+    print(f"DEBUG: normalized phone for new user: {normalized_phone}")
     db_user = models.User(
         telegram_id=user.telegram_id,
         name=user.name,
-        phone=user.phone,
+        phone=normalized_phone,
         avatar_url=user.avatar_url
     )
     db.add(db_user)
@@ -35,8 +63,9 @@ def get_or_create_user(db: Session, user: schemas.UserCreate):
         print(f"DEBUG: User {db_user.id} found. Phone: {db_user.phone}")
         # Update phone number if it was missing
         if not db_user.phone and user.phone:
-            print(f"DEBUG: Updating phone for user {db_user.id} to {user.phone}")
-            db_user.phone = user.phone
+            normalized_phone = normalize_phone(user.phone)
+            print(f"DEBUG: Updating phone for user {db_user.id} to {normalized_phone}")
+            db_user.phone = normalized_phone
             db.commit()
             db.refresh(db_user)
         return db_user
@@ -47,7 +76,9 @@ def update_user_phone(db: Session, user_id: int, phone: str):
     db_user = db.query(models.User).filter(models.User.id == user_id).first()
     if not db_user:
         return None
-    db_user.phone = phone
+    normalized_phone = normalize_phone(phone)
+    print(f"DEBUG: Updating user {user_id} phone to normalized: {normalized_phone}")
+    db_user.phone = normalized_phone
     db.commit()
     db.refresh(db_user)
     return db_user
