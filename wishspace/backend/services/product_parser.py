@@ -1,21 +1,39 @@
 import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 import re
 from urllib.parse import urljoin, urlparse
 import time
 import random
 from typing import Dict, Optional
+import json
 
 class ProductParser:
     def __init__(self):
-        # Rotation of User-Agents to avoid detection
+        # Rotation of User-Agents to avoid detection - mix of real browser agents
         self.user_agents = [
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0',
-            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/121.0'
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:109.0) Gecko/20100101 Firefox/121.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36 Edg/121.0.0.0',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 OPR/106.0.0.0'
         ]
+        
+        # Setup session with connection pooling and retry strategy
+        self.session = requests.Session()
+        retry_strategy = Retry(
+            total=3,
+            status_forcelist=[429, 500, 502, 503, 504],
+            method_whitelist=["HEAD", "GET", "OPTIONS"],
+            backoff_factor=1
+        )
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        self.session.mount("http://", adapter)
+        self.session.mount("https://", adapter)
         
         # Common price selectors for popular Russian e-commerce sites
         self.price_selectors = {
@@ -59,30 +77,62 @@ class ProductParser:
             ]
         }
     
-    def get_headers(self) -> Dict[str, str]:
-        """Generate realistic headers for requests"""
+    def get_headers(self, domain: str = None) -> Dict[str, str]:
+        """Generate realistic headers for requests with domain-specific optimizations"""
+        user_agent = random.choice(self.user_agents)
+        
+        # Extract browser info from user agent
+        is_chrome = 'Chrome' in user_agent
+        is_firefox = 'Firefox' in user_agent
+        is_safari = 'Safari' in user_agent and 'Chrome' not in user_agent
+        is_edge = 'Edg' in user_agent
+        
         headers = {
-            'User-Agent': random.choice(self.user_agents),
+            'User-Agent': user_agent,
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
             'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
             'Accept-Encoding': 'gzip, deflate, br',
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
             'Cache-Control': 'max-age=0',
-            'sec-ch-ua': '"Google Chrome";v="120", "Chromium";v="120", "Not:A-Brand";v="8"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-User': '?1'
         }
         
-        # Add referer for some sites to look more legitimate
-        if random.choice([True, False]):
-            headers['Referer'] = 'https://www.google.com/'
+        # Add browser-specific headers
+        if is_chrome or is_edge:
+            headers.update({
+                'sec-ch-ua': '"Google Chrome";v="120", "Chromium";v="120", "Not:A-Brand";v="8"',
+                'sec-ch-ua-mobile': '?0',
+                'sec-ch-ua-platform': random.choice(['"Windows"', '"macOS"', '"Linux"']),
+                'Sec-Fetch-Dest': 'document',
+                'Sec-Fetch-Mode': 'navigate',
+                'Sec-Fetch-Site': random.choice(['none', 'same-origin', 'cross-site']),
+                'Sec-Fetch-User': '?1'
+            })
         
-        return headers
+        # Domain-specific referers and headers
+        referers = [
+            'https://www.google.com/',
+            'https://yandex.ru/search/',
+            'https://www.bing.com/',
+            'https://duckduckgo.com/'
+        ]
+        
+        if domain and 'market.yandex.ru' in domain:
+            # Specific headers for Yandex Market
+            headers.update({
+                'Referer': random.choice([
+                    'https://yandex.ru/',
+                    'https://yandex.ru/search/',
+                    'https://market.yandex.ru/'
+                ]),
+                'X-Requested-With': 'XMLHttpRequest' if random.choice([True, False]) else None,
+                'Origin': 'https://market.yandex.ru' if random.choice([True, False]) else None
+            })
+        elif random.choice([True, False]):
+            headers['Referer'] = random.choice(referers)
+        
+        # Clean None values
+        return {k: v for k, v in headers.items() if v is not None}
     
     def extract_price_from_text(self, text: str) -> Optional[float]:
         """Extract price from text using regex"""
@@ -245,32 +295,48 @@ class ProductParser:
         
         return None
     
-    def scrape_url(self, url: str, max_retries: int = 2) -> Dict:
-        """Main scraping function with retry logic"""
+    def scrape_url(self, url: str, max_retries: int = 3) -> Dict:
+        """Main scraping function with advanced anti-bot protection"""
         print(f"DEBUG: Scraping URL with custom parser: {url}")
+        domain = urlparse(url).netloc.lower()
         
         for attempt in range(max_retries + 1):
             try:
-                # Add progressive delay for retries
+                # Progressive delay with jitter
                 if attempt > 0:
-                    delay = random.uniform(2, 5) * (attempt + 1)
+                    base_delay = random.uniform(3, 8) * (attempt + 1)
+                    jitter = random.uniform(-1, 1)
+                    delay = max(1, base_delay + jitter)
                     print(f"DEBUG: Retry attempt {attempt}, waiting {delay:.1f}s")
                     time.sleep(delay)
                 else:
-                    # Initial delay
-                    time.sleep(random.uniform(0.5, 1.5))
+                    # Initial delay with randomization
+                    time.sleep(random.uniform(1, 3))
                 
-                # Make request
-                response = requests.get(
+                # Use session for connection reuse
+                headers = self.get_headers(domain)
+                print(f"DEBUG: Using headers: {json.dumps(headers, indent=2)}")
+                
+                # Make request with session
+                response = self.session.get(
                     url, 
-                    headers=self.get_headers(),
-                    timeout=15,
-                    allow_redirects=True
+                    headers=headers,
+                    timeout=20,
+                    allow_redirects=True,
+                    stream=False
                 )
+                
+                print(f"DEBUG: Response status: {response.status_code}")
+                print(f"DEBUG: Response headers: {dict(response.headers)}")
                 
                 # Handle different response codes
                 if response.status_code == 429:
                     print(f"DEBUG: Rate limited (429) on attempt {attempt + 1}")
+                    retry_after = response.headers.get('Retry-After')
+                    if retry_after:
+                        wait_time = int(retry_after) + random.uniform(1, 5)
+                        print(f"DEBUG: Retry-After header found, waiting {wait_time}s")
+                        time.sleep(wait_time)
                     if attempt < max_retries:
                         continue
                     else:
@@ -279,19 +345,29 @@ class ProductParser:
                 
                 if response.status_code == 403:
                     print(f"DEBUG: Access forbidden (403)")
+                    # Try with different user agent on 403
+                    if attempt < max_retries:
+                        continue
                     return self._create_failed_result("Access forbidden")
+                
+                if response.status_code == 503:
+                    print(f"DEBUG: Service unavailable (503)")
+                    if attempt < max_retries:
+                        continue
+                    return self._create_failed_result("Service unavailable")
                 
                 response.raise_for_status()
                 
                 # Parse HTML
                 soup = BeautifulSoup(response.content, 'lxml')
-                domain = urlparse(url).netloc.lower()
                 
                 # Extract data
                 title = self.extract_title(soup)
                 price = self.extract_price(soup, domain)
                 description = self.extract_description(soup)
                 image_url = self.extract_image(soup, url)
+                
+                print(f"DEBUG: Extracted - title: {title}, price: {price}")
                 
                 # Check if we got meaningful data
                 if title and len(title) > 3:
@@ -323,7 +399,7 @@ class ProductParser:
                 
             except requests.exceptions.RequestException as e:
                 print(f"DEBUG: Request error on attempt {attempt + 1}: {e}")
-                if attempt < max_retries and "429" in str(e):
+                if attempt < max_retries and ("429" in str(e) or "503" in str(e)):
                     continue
                 return self._create_failed_result(f"Request failed: {str(e)}")
                 
