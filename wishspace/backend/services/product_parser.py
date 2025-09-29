@@ -78,7 +78,10 @@ class ProductParser:
             'goldapple.ru': [
                 '.product-card__price-current',
                 '.price-current',
-                '.product-price__value'
+                '.product-price__value',
+                '.product-price .price',
+                '[data-testid="price"]',
+                '.price'
             ]
         }
     
@@ -133,6 +136,17 @@ class ProductParser:
                 'X-Requested-With': 'XMLHttpRequest' if random.choice([True, False]) else None,
                 'Origin': 'https://market.yandex.ru' if random.choice([True, False]) else None
             })
+        elif domain and 'goldapple.ru' in domain:
+            # Specific headers for GoldApple
+            headers.update({
+                'Referer': 'https://goldapple.ru/',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'ru-RU,ru;q=0.8,en-US;q=0.5,en;q=0.3'
+            })
+            # Remove some headers that might trigger bot detection
+            headers.pop('sec-ch-ua', None)
+            headers.pop('sec-ch-ua-mobile', None)
+            headers.pop('sec-ch-ua-platform', None)
         elif random.choice([True, False]):
             headers['Referer'] = random.choice(referers)
         
@@ -389,23 +403,41 @@ class ProductParser:
                 
                 print(f"DEBUG: Extracted - title: {title}, price: {price}")
                 
-                # Check if we got meaningful data
+                # Check if we got meaningful data (not a promo/error page)
                 if title and len(title) > 3:
-                    result = {
-                        'success': True,
-                        'data': {
-                            'llm_extraction': {
-                                'title': title,
-                                'price': price or 0.0,
-                                'description': description,
-                                'image_url': image_url
-                            },
-                            'source': 'custom_parser',
-                            'url': url
+                    # Check for common error/promo page indicators
+                    error_indicators = [
+                        'оформи заказ',
+                        'доставкой',
+                        'error',
+                        'not found',
+                        'страница не найдена',
+                        'antibot',
+                        'captcha'
+                    ]
+                    
+                    is_error_page = any(indicator in title.lower() for indicator in error_indicators)
+                    
+                    if not is_error_page:
+                        result = {
+                            'success': True,
+                            'data': {
+                                'llm_extraction': {
+                                    'title': title,
+                                    'price': price or 0.0,
+                                    'description': description,
+                                    'image_url': image_url
+                                },
+                                'source': 'custom_parser',
+                                'url': url
+                            }
                         }
-                    }
-                    print(f"DEBUG: Custom parser success: {result}")
-                    return result
+                        print(f"DEBUG: Custom parser success: {result}")
+                        return result
+                    else:
+                        print(f"DEBUG: Detected error/promo page, title: {title}")
+                        if attempt < max_retries:
+                            continue
                 else:
                     print(f"DEBUG: No meaningful title extracted on attempt {attempt + 1}")
                     if attempt < max_retries:
